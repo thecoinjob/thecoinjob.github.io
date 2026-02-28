@@ -53,7 +53,7 @@
         <a class="coin" href="https://www.tradingview.com/chart/?symbol=BINANCE:SOLUSDT&interval=60" target="_blank" rel="noopener noreferrer" onclick="return openChart('SOLUSDT')">◎ SOL</a>
         <a class="coin" href="https://www.tradingview.com/chart/?symbol=BINANCE:XRPUSDT&interval=60" target="_blank" rel="noopener noreferrer" onclick="return openChart('XRPUSDT')">✕ XRP</a>
         <a class="coin" href="https://www.tradingview.com/chart/?symbol=BINANCE:BNBUSDT&interval=60" target="_blank" rel="noopener noreferrer" onclick="return openChart('BNBUSDT')">◈ BNB</a>
-        <a class="coin" href="https://www.tradingview.com/chart/?symbol=BINANCE:BTCUSDT&interval=60" target="_blank" rel="noopener noreferrer" onclick="return openChart('BTCUSDT')">₮ USDT</a>
+        <a class="coin" href="https://www.tradingview.com/chart/?symbol=BINANCE:BCHUSDT&interval=60" target="_blank" rel="noopener noreferrer" onclick="return openChart('BCHUSDT')">Ƀ BCH</a>
         <a class="coin" href="https://www.tradingview.com/chart/?symbol=BINANCE:DOGEUSDT&interval=60" target="_blank" rel="noopener noreferrer" onclick="return openChart('DOGEUSDT')">Ð DOGE</a>
         <a class="coin" href="https://www.tradingview.com/chart/?symbol=BINANCE:LTCUSDT&interval=60" target="_blank" rel="noopener noreferrer" onclick="return openChart('LTCUSDT')">Ł LTC</a>
       </div>
@@ -69,8 +69,11 @@
   <script>
     function openChart(symbol){
       const url = `https://www.tradingview.com/chart/?symbol=BINANCE:${symbol}&interval=60`;
-      window.open(url, '_blank', 'noopener,noreferrer');
-      window.focus();
+      const w = window.open(url, '_blank', 'noopener,noreferrer');
+      if (w) {
+        try { w.blur(); } catch (e) {}
+      }
+      setTimeout(() => window.focus(), 0);
       return false;
     }
   </script>
