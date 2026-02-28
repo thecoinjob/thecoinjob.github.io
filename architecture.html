@@ -8,27 +8,97 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    body{margin:0;font-family:'Space Grotesk',system-ui;background:#05070d;color:#e8edf8}
-    .wrap{max-width:980px;margin:0 auto;padding:28px}
-    .card{background:#0f1422;border:1px solid #25304a;border-radius:14px;padding:18px;margin-top:14px}
+    :root{--bg:#05070d;--card:#0f1422;--line:#25304a;--txt:#e8edf8;--muted:#9aa6bf}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Space Grotesk',system-ui;background:radial-gradient(1200px 700px at 10% -10%,#1c2550 0%,transparent 50%),radial-gradient(1000px 600px at 90% 0%,#003a58 0%,transparent 45%),var(--bg);color:var(--txt)}
+    .wrap{max-width:1000px;margin:0 auto;padding:28px}
     a{color:#b9ccff}
+    h1{font-size:44px;line-height:1.08;margin:0 0 14px}
+    .lead{font-size:18px;color:#d9e4ff;line-height:1.65}
+    .muted{color:var(--muted)}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px}
+    h2{margin:0 0 8px;font-size:24px;color:#f8e6b0}
+    h3{margin:14px 0 8px;font-size:20px;color:#f3dc9f}
+    p{margin:0 0 12px;line-height:1.7}
+    ul{margin:8px 0 12px 18px;padding:0}
+    li{margin:8px 0;line-height:1.65}
   </style>
 </head>
 <body>
   <div style="position:sticky;top:0;z-index:9999;background:#ffcc00;color:#111;text-align:center;padding:10px 12px;font-weight:700;letter-spacing:.04em;">SITE UNDER CONSTRUCTION</div>
   <div class="wrap">
     <p><a href="index.html">← Back to home</a></p>
+
     <h1>System Architecture</h1>
-    <p>How everything connects.</p>
-    <div class="card"><strong>Control → Value → Participation → Liquidity</strong></div>
-    <div class="card">
+    <p class="lead">How everything connects. Control → Value → Participation → Liquidity.</p>
+
+    <section class="card">
+      <p>
+        TCJ Smart Volume Concept operates as a structured sequence. Each component depends on the previous one.
+        When the order breaks, structure breaks.
+      </p>
+      <p>The framework follows this progression:</p>
+      <p><strong>Control (TCC) → Value (AEV) → Participation (VDI) → Liquidity (SCC or TCC)</strong></p>
+      <p><strong>This is not theory. It is the order in which dominance unfolds.</strong></p>
+
+      <h3>1. Control Initiates the Move</h3>
+      <p>
+        A Tactical Control Candle is the starting event. It marks the moment initiative appears.
+        Without a control event, there is no structural reason to expect continuation.
+      </p>
+      <p><strong>Control is the trigger that activates the rest of the framework.</strong></p>
+
+      <h3>2. Value Defines the Reference</h3>
+      <p>
+        Once control appears, value resets. AEV forms immediately from that control event and becomes the reference for the dominant side.
+      </p>
+      <p>
+        Now the question becomes: Is price holding relative to that value, or failing to defend it?
+      </p>
       <ul>
-        <li><strong>Control:</strong> Identify who is driving direction.</li>
-        <li><strong>Value:</strong> Track where fair-value acceptance builds.</li>
-        <li><strong>Participation:</strong> Confirm commitment with volume and Open Interest behavior.</li>
-        <li><strong>Liquidity:</strong> Map where price is likely to be pulled next.</li>
+        <li>If value is respected, the control event remains structurally valid.</li>
+        <li>If value is violated, control weakens.</li>
       </ul>
-    </div>
+      <p><strong>Control starts the move. Value determines if it survives.</strong></p>
+
+      <h3>3. Participation Validates Continuation</h3>
+      <p>
+        After control establishes value, participation must expand. VDI measures whether the dominant side is still pressing with real imbalance.
+      </p>
+      <p>
+        This is where many moves fail. Price may drift. But without participation expansion, continuation lacks structural support.
+      </p>
+      <p><strong>Participation is what transforms a control event into sustained movement.</strong></p>
+
+      <h3>4. Liquidity Becomes the Objective</h3>
+      <p>
+        When control holds, value is respected, and participation expands, price rotates toward liquidity.
+      </p>
+      <p>Liquidity often sits at:</p>
+      <ul>
+        <li>Prior Structural Control Candles</li>
+        <li>Opposing Tactical Control zones</li>
+      </ul>
+      <p>
+        These areas represent unfinished business — prior dominance, trapped positioning, or unresolved imbalance.
+      </p>
+      <p><strong>Liquidity is not random. It is where structure naturally completes.</strong></p>
+
+      <h3>How It Connects</h3>
+      <ul>
+        <li>If control forms but value fails → structure weakens.</li>
+        <li>If value holds but participation does not expand → movement stalls.</li>
+        <li>If participation expands without control foundation → fragility increases.</li>
+      </ul>
+      <p>Every phase depends on alignment. The architecture forces sequencing:</p>
+      <ul>
+        <li>No control → no value reset.</li>
+        <li>No value respect → no structural validity.</li>
+        <li>No participation → no continuation.</li>
+        <li>No continuation → liquidity remains unreachable.</li>
+      </ul>
+      <p><strong>The strength of the framework is not in any single component. It is in the order.</strong></p>
+    </section>
   </div>
 </body>
 </html>
