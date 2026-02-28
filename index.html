@@ -3,32 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TCJ | About</title>
+  <title>TCJ Concepts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: Arial, sans-serif; background:#0b0f14; color:#e6edf3; margin:0; }
-    .wrap { max-width: 860px; margin: 60px auto; padding: 24px; }
-    h1 { font-size: 42px; margin-bottom: 8px; }
-    .tag { color:#8b949e; margin-bottom: 24px; }
-    .card { background:#111827; border:1px solid #30363d; border-radius:12px; padding:20px; margin-bottom:16px; }
-    strong { color:#58a6ff; }
+    :root{--bg:#05070d;--card:#0f1422;--line:#25304a;--txt:#e8edf8;--muted:#9aa6bf;--a:#7aa2ff;--b:#00d4ff;--c:#8b5cf6}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Space Grotesk',system-ui;background:radial-gradient(1200px 700px at 10% -10%,#1c2550 0%,transparent 50%),radial-gradient(1000px 600px at 90% 0%,#003a58 0%,transparent 45%),var(--bg);color:var(--txt)}
+    .wrap{max-width:1000px;margin:0 auto;padding:28px}
+    .nav{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+    .brand{font-weight:700;letter-spacing:.4px}
+    .links a{color:var(--muted);text-decoration:none;margin-left:18px}
+    .hero{padding:80px 0 42px}
+    h1{font-size:56px;line-height:1.05;margin:0 0 12px}
+    .grad{background:linear-gradient(90deg,var(--a),var(--b),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .sub{font-size:18px;color:var(--muted);max-width:760px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:16px;padding:18px;backdrop-filter:blur(4px)}
+    .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    .v{font-size:20px;margin-top:8px}
+    .pill{display:inline-block;margin-top:10px;padding:7px 11px;border:1px solid #355092;border-radius:999px;color:#b8c9ff;font-size:12px}
+    .section{margin-top:34px}
+    .section h2{margin:0 0 10px;font-size:28px}
+    ul{margin:8px 0 0 18px;color:#c8d2e6}
+    footer{margin:44px 0 20px;color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>TCJ Smart Volume Concept</h1>
-    <p class="tag">Rule-based market control framework for crypto futures.</p>
+    <nav class="nav">
+      <div class="brand">TCJ • Smart Volume Concept</div>
+      <div class="links">
+        <a href="#about">About</a>
+        <a href="#framework">Framework</a>
+        <a href="#models">FP Models</a>
+      </div>
+    </nav>
 
-    <div class="card">
-      <p><strong>About:</strong> This site documents TCJ's trading concepts, models, and operating rules.</p>
-      <p><strong>Focus:</strong> Control transitions, Open Interest integrity, VDI slope, and tactical execution discipline.</p>
-      <p><strong>Current Model Work:</strong> FP v2, FP v2.1, and FP v2.1b parallel validation.</p>
-    </div>
+    <header class="hero">
+      <h1>Rule-based <span class="grad">market control</span><br />for crypto futures</h1>
+      <p class="sub">A deterministic research and execution framework focused on Open Interest integrity, VDI trend health, and Tactical Control Candle precision.</p>
+      <span class="pill">Live Site v2</span>
+    </header>
 
-    <div class="card">
-      <p><strong>Pipeline:</strong> SCC/TCC → 15m AEV → VDI → trendlines → volume → liquidity</p>
-      <p><strong>Principle:</strong> No Tactical MC = no trade.</p>
-      <p><strong>Status:</strong> First public page live.</p>
-    </div>
+    <section class="grid" id="about">
+      <article class="card"><div class="k">System</div><div class="v">TCJ Smart Volume Concept</div></article>
+      <article class="card"><div class="k">Core Pipeline</div><div class="v">SCC/TCC → 15m AEV → VDI → trendlines → volume → liquidity</div></article>
+      <article class="card"><div class="k">Execution Rule</div><div class="v">No Tactical MC = No Trade</div></article>
+    </section>
+
+    <section class="section" id="framework">
+      <h2>Framework Highlights</h2>
+      <ul>
+        <li>Open Interest-first continuation validation</li>
+        <li>VDI slope governs continuation and exits</li>
+        <li>Structural context + tactical execution discipline</li>
+      </ul>
+    </section>
+
+    <section class="section" id="models">
+      <h2>Model Work</h2>
+      <ul>
+        <li>FP v2 (baseline)</li>
+        <li>FP v2.1 (deterministic thresholds)</li>
+        <li>FP v2.1b (quality-timing, shadow validation)</li>
+      </ul>
+    </section>
+
+    <footer>© 2026 TCJ. Built on GitHub Pages.</footer>
   </div>
 </body>
 </html>
