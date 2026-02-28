@@ -8,23 +8,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    :root{--bg:#05070d;--card:#0f1422;--line:#25304a;--txt:#e8edf8;--muted:#9aa6bf;--a:#f7931a;--b:#627eea;--c:#14f195;--d:#9945ff}
+    :root{--txt:#f4efe6;--muted:#ddd2bf;--gold:#d4af37;--line:rgba(255,255,255,.22)}
     *{box-sizing:border-box}
-    body{margin:0;font-family:'Space Grotesk',system-ui;background:radial-gradient(1200px 700px at 10% -10%,#1c2550 0%,transparent 50%),radial-gradient(1000px 600px at 90% 0%,#003a58 0%,transparent 45%),var(--bg);color:var(--txt)}
-    .wrap{max-width:1000px;margin:0 auto;padding:28px}
+    body{
+      margin:0;
+      font-family:'Space Grotesk',system-ui;
+      color:var(--txt);
+      min-height:100vh;
+      background:
+        linear-gradient(rgba(12,10,8,.55),rgba(12,10,8,.65)),
+        url('https://images.openai.com/static-rsc-3/I-EMiOQz7fZuiwXL5NKLAhbfbqTmOCbRLclE2_7mXhVKnpc1h_rroW9J7vjxhZo2JxtVmiA2HREdBNc58pOVtsTQEhHOS83bgJBfRRn5fPc?purpose=fullsize&v=1') center/cover no-repeat fixed;
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:28px}
     .nav{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
-    .brand{font-weight:700;letter-spacing:.4px}
-    .hero{padding:72px 0 36px}
-    h1{font-size:56px;line-height:1.05;margin:0 0 14px}
-    .grad{background:linear-gradient(90deg,var(--a),var(--b),var(--c),var(--d));-webkit-background-clip:text;background-clip:text;color:transparent}
-    .sub{font-size:18px;color:var(--muted);max-width:840px}
-    .tickers{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
-    .coin{display:inline-block;padding:8px 12px;border:1px solid #355092;border-radius:999px;color:#d7e3ff;font-size:13px;background:rgba(255,255,255,.03)}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:16px;padding:18px;backdrop-filter:blur(4px)}
-    .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    .brand{font-weight:700;letter-spacing:.4px;color:#f6ead1}
+    .hero{padding:90px 0 42px}
+    h1{font-size:58px;line-height:1.06;margin:0 0 14px;max-width:980px;text-shadow:0 2px 10px rgba(0,0,0,.45)}
+    .sub{font-size:19px;color:var(--muted);max-width:820px;text-shadow:0 1px 8px rgba(0,0,0,.4)}
+    .tickers{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+    .coin{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:999px;color:#f2e8d3;font-size:13px;background:rgba(0,0,0,.25);backdrop-filter:blur(4px)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:28px}
+    .card{background:linear-gradient(180deg,rgba(0,0,0,.36),rgba(0,0,0,.22));border:1px solid var(--line);border-radius:16px;padding:18px;backdrop-filter:blur(5px)}
+    .k{font-size:12px;color:#f3dc9f;text-transform:uppercase;letter-spacing:.12em}
     .v{font-size:20px;margin-top:8px}
-    footer{margin:44px 0 20px;color:var(--muted);font-size:13px}
+    .v a{color:inherit;text-decoration:underline;text-decoration-color:rgba(212,175,55,.85)}
+    .v a:hover{color:#fff7e3}
   </style>
 </head>
 <body>
@@ -34,7 +42,7 @@
     </nav>
 
     <header class="hero">
-      <h1><span class="grad">Supercharge your crypto trading, leverage new techniques and generate passive income with TheCoinJob.</span></h1>
+      <h1>Supercharge your crypto trading, leverage new techniques and generate passive income with TheCoinJob.</h1>
       <p class="sub">Built for crypto-focused traders who want practical tools, sharp insights, and scalable systems.</p>
 
       <div class="tickers" aria-label="crypto symbols">
@@ -50,9 +58,9 @@
     </header>
 
     <section class="grid">
-      <article class="card"><div class="k">Strategy</div><div class="v"><a href="strategy.html" style="color:inherit;text-decoration:underline;">TCJ Smart Volume Concept</a></div></article>
-      <article class="card"><div class="k">System Architecture</div><div class="v"><a href="architecture.html" style="color:inherit;text-decoration:underline;">How everything connects. Control → Value → Participation → Liquidity.</a></div></article>
-      <article class="card"><div class="k">Execution Discipline</div><div class="v"><a href="discipline.html" style="color:inherit;text-decoration:underline;">This is where rules live.</a></div></article>
+      <article class="card"><div class="k">Strategy</div><div class="v"><a href="strategy.html">TCJ Smart Volume Concept</a></div></article>
+      <article class="card"><div class="k">System Architecture</div><div class="v"><a href="architecture.html">How everything connects. Control → Value → Participation → Liquidity.</a></div></article>
+      <article class="card"><div class="k">Execution Discipline</div><div class="v"><a href="discipline.html">This is where rules live.</a></div></article>
     </section>
 
   </div>
