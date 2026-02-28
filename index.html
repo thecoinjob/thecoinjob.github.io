@@ -3,75 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TCJ Concepts</title>
+  <title>TheCoinJob</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    :root{--bg:#05070d;--card:#0f1422;--line:#25304a;--txt:#e8edf8;--muted:#9aa6bf;--a:#7aa2ff;--b:#00d4ff;--c:#8b5cf6}
+    :root{--bg:#05070d;--card:#0f1422;--line:#25304a;--txt:#e8edf8;--muted:#9aa6bf;--a:#f7931a;--b:#627eea;--c:#14f195;--d:#9945ff}
     *{box-sizing:border-box}
     body{margin:0;font-family:'Space Grotesk',system-ui;background:radial-gradient(1200px 700px at 10% -10%,#1c2550 0%,transparent 50%),radial-gradient(1000px 600px at 90% 0%,#003a58 0%,transparent 45%),var(--bg);color:var(--txt)}
     .wrap{max-width:1000px;margin:0 auto;padding:28px}
     .nav{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
     .brand{font-weight:700;letter-spacing:.4px}
-    .links a{color:var(--muted);text-decoration:none;margin-left:18px}
-    .hero{padding:80px 0 42px}
-    h1{font-size:56px;line-height:1.05;margin:0 0 12px}
-    .grad{background:linear-gradient(90deg,var(--a),var(--b),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
-    .sub{font-size:18px;color:var(--muted);max-width:760px}
+    .hero{padding:72px 0 36px}
+    h1{font-size:56px;line-height:1.05;margin:0 0 14px}
+    .grad{background:linear-gradient(90deg,var(--a),var(--b),var(--c),var(--d));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .sub{font-size:18px;color:var(--muted);max-width:840px}
+    .tickers{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+    .coin{display:inline-block;padding:8px 12px;border:1px solid #355092;border-radius:999px;color:#d7e3ff;font-size:13px;background:rgba(255,255,255,.03)}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px}
     .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:16px;padding:18px;backdrop-filter:blur(4px)}
     .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
     .v{font-size:20px;margin-top:8px}
-    .pill{display:inline-block;margin-top:10px;padding:7px 11px;border:1px solid #355092;border-radius:999px;color:#b8c9ff;font-size:12px}
-    .section{margin-top:34px}
-    .section h2{margin:0 0 10px;font-size:28px}
-    ul{margin:8px 0 0 18px;color:#c8d2e6}
     footer{margin:44px 0 20px;color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <nav class="nav">
-      <div class="brand">TCJ • Smart Volume Concept</div>
-      <div class="links">
-        <a href="#about">About</a>
-        <a href="#framework">Framework</a>
-        <a href="#models">FP Models</a>
-      </div>
+      <div class="brand">TheCoinJob</div>
     </nav>
 
     <header class="hero">
-      <h1>Rule-based <span class="grad">market control</span><br />for crypto futures</h1>
-      <p class="sub">A deterministic research and execution framework focused on Open Interest integrity, VDI trend health, and Tactical Control Candle precision.</p>
-      <span class="pill">Live Site v2</span>
+      <h1><span class="grad">Supercharge your crypto trading, leverage new techniques and generate passive income with TheCoinJob.</span></h1>
+      <p class="sub">Built for crypto-focused traders who want practical tools, sharp insights, and scalable systems.</p>
+
+      <div class="tickers" aria-label="crypto symbols">
+        <span class="coin">₿ BTC</span>
+        <span class="coin">Ξ ETH</span>
+        <span class="coin">◎ SOL</span>
+        <span class="coin">✕ XRP</span>
+        <span class="coin">◈ BNB</span>
+        <span class="coin">₮ USDT</span>
+        <span class="coin">Ð DOGE</span>
+        <span class="coin">Ł LTC</span>
+      </div>
     </header>
 
-    <section class="grid" id="about">
-      <article class="card"><div class="k">System</div><div class="v">TCJ Smart Volume Concept</div></article>
-      <article class="card"><div class="k">Core Pipeline</div><div class="v">SCC/TCC → 15m AEV → VDI → trendlines → volume → liquidity</div></article>
-      <article class="card"><div class="k">Execution Rule</div><div class="v">No Tactical MC = No Trade</div></article>
+    <section class="grid">
+      <article class="card"><div class="k">Focus</div><div class="v">Crypto trading performance</div></article>
+      <article class="card"><div class="k">Edge</div><div class="v">Actionable market techniques</div></article>
+      <article class="card"><div class="k">Goal</div><div class="v">Consistent growth + passive income systems</div></article>
     </section>
 
-    <section class="section" id="framework">
-      <h2>Framework Highlights</h2>
-      <ul>
-        <li>Open Interest-first continuation validation</li>
-        <li>VDI slope governs continuation and exits</li>
-        <li>Structural context + tactical execution discipline</li>
-      </ul>
-    </section>
-
-    <section class="section" id="models">
-      <h2>Model Work</h2>
-      <ul>
-        <li>FP v2 (baseline)</li>
-        <li>FP v2.1 (deterministic thresholds)</li>
-        <li>FP v2.1b (quality-timing, shadow validation)</li>
-      </ul>
-    </section>
-
-    <footer>© 2026 TCJ. Built on GitHub Pages.</footer>
+    <footer>© 2026 TheCoinJob. Built on GitHub Pages.</footer>
   </div>
 </body>
 </html>
