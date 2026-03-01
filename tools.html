@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TCJ Trading Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#090807;--txt:#f4efe6;--muted:#d5c8b2;--gold:#d4af37;--line:rgba(255,255,255,.18)}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 600px at 10% -10%,#2a2110 0%,#090807 55%,#070606 100%);color:var(--txt);font-family:'Space Grotesk',system-ui}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px}
+    .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    a{color:inherit}
+    .brand{font-weight:700;letter-spacing:.4px;color:#f6ead1;text-decoration:none}
+    .back{font-size:14px;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:8px 12px;border-radius:999px}
+    .back:hover{border-color:var(--gold);color:#fff}
+    h1{font-size:42px;line-height:1.1;margin:14px 0 10px}
+    .sub{color:var(--muted);max-width:840px}
+    .note{margin-top:14px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;color:#e8dcc5;background:rgba(255,255,255,.02)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:24px}
+    .card{border:1px solid var(--line);border-radius:16px;padding:18px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01))}
+    .k{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#f3dc9f}
+    .title{margin:8px 0 8px;font-size:22px}
+    .desc{color:var(--muted);font-size:15px;line-height:1.5;min-height:64px}
+    .meta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+    .chip{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:#e8dbc4}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{display:inline-block;padding:9px 12px;border-radius:10px;border:1px solid var(--line);text-decoration:none;font-size:14px}
+    .btn.primary{background:linear-gradient(180deg,#d4af37,#b7901f);color:#1c1506;border-color:#d9b94f;font-weight:700}
+    .btn:hover{transform:translateY(-1px)}
+    .foot{margin-top:24px;color:#bcae94;font-size:14px}
+    code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a class="brand" href="index.html">TheCoinJob</a>
+      <a class="back" href="index.html">← Back Home</a>
+    </div>
+
+    <h1>TCJ Trading Tools</h1>
+    <p class="sub">Indicator library for your TradingView workflow. Click any tool to open its TradingView page and add it directly to your chart.</p>
+    <div class="note">
+      Replace placeholder links with your real TradingView script links in this file.
+      Look for <code>tradingview.com/script/...</code> and swap them with your published indicators.
+    </div>
+
+    <section class="grid">
+      <article class="card">
+        <div class="k">Indicator</div>
+        <h2 class="title">VDI</h2>
+        <p class="desc">Volume Delta Imbalance for trend-health validation. Keep trades only while VDI slope supports direction.</p>
+        <div class="meta">
+          <span class="chip">Trend Validation</span>
+          <span class="chip">Execution Filter</span>
+        </div>
+        <div class="btns">
+          <a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/script/REPLACE_WITH_VDI_SCRIPT/">Open on TradingView</a>
+          <a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/chart/">Open Chart</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="k">Indicator</div>
+        <h2 class="title">TCC Detector</h2>
+        <p class="desc">Tactical Control Candle detector for execution context (MC/PC). Defines local control and tactical invalidation zones.</p>
+        <div class="meta">
+          <span class="chip">Tactical MC</span>
+          <span class="chip">Execution Context</span>
+        </div>
+        <div class="btns">
+          <a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/script/REPLACE_WITH_TCC_SCRIPT/">Open on TradingView</a>
+          <a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/chart/">Open Chart</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="k">Indicator</div>
+        <h2 class="title">SCC Detector</h2>
+        <p class="desc">Structural Control Candle detector (FOB/HOB) for regime control, major targets, and macro context mapping.</p>
+        <div class="meta">
+          <span class="chip">Structure</span>
+          <span class="chip">Regime Control</span>
+        </div>
+        <div class="btns">
+          <a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/script/REPLACE_WITH_SCC_SCRIPT/">Open on TradingView</a>
+          <a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/chart/">Open Chart</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="k">Indicator</div>
+        <h2 class="title">Force Index with Divergence</h2>
+        <p class="desc">Force Index engine with divergence detection to identify participation strength, weakness, and potential control transfer.</p>
+        <div class="meta">
+          <span class="chip">Participation</span>
+          <span class="chip">Divergence</span>
+        </div>
+        <div class="btns">
+          <a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/script/REPLACE_WITH_FORCE_INDEX_SCRIPT/">Open on TradingView</a>
+          <a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.tradingview.com/chart/">Open Chart</a>
+        </div>
+      </article>
+    </section>
+
+    <p class="foot">Tip: once your scripts are published, users can click <strong>Open on TradingView</strong> → <strong>Add to favorite indicators</strong> for one-click reuse.</p>
+  </div>
+</body>
+</html>
