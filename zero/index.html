@@ -22,17 +22,14 @@
       <section class="board-shell"><div class="board-head"><div><h2>Main Board</h2><p id="board-note">BTC first · Pinned coins stay fixed · Your settings are saved in this browser</p></div><form id="add-form" class="add-form"><input id="symbol-input" name="symbol" autocomplete="off" placeholder="Add symbol: SOL or SOLUSDT" /><button type="submit">ADD</button></form></div><div class="table-wrap"><table class="board-table"><colgroup data-dynamic-cols></colgroup><thead id="main-head"></thead><tbody id="main-board"></tbody></table></div></section>
     </main>
     <script>
-      (() => {
-        if (!("serviceWorker" in navigator)) return;
-        navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister()))).catch(() => {});
-      })();
+      (() => { if (!("serviceWorker" in navigator)) return; navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister()))).catch(() => {}); })();
     </script>
     <script src="/zero/brain.js?v=20261003j"></script>
     <script src="/zero/scc.js?v=20261003j"></script>
     <script src="/zero/market-data.js?v=20261003j"></script>
-    <script src="/zero/static/browser-data-v2.js?v=20261003l"></script>
+    <script src="/zero/static/browser-data-v2.js?v=20261003m"></script>
     <script src="/zero/static/discovery-guard.js?v=20261003j"></script>
-    <script src="/zero/static/browser-engine.js?v=20261003l"></script>
+    <script src="/zero/static/browser-engine.js?v=20261003m"></script>
     <script src="/zero/static/control-browser.js?v=20261003j"></script>
     <script src="/zero/static/browser-board.js?v=20261003j"></script>
     <script src="/zero/static/browser-board-population.js?v=20261003k"></script>
@@ -43,5 +40,6 @@
     <script src="/zero/static/directional-participation.js?v=20261003j"></script>
     <script src="/zero/static/market-ranking.js?v=20261003j"></script>
     <script src="/zero/static/hints-toggle.js?v=20261003j"></script>
+    <script src="/zero/static/diagnostics.js?v=20261003a"></script>
   </body>
 </html>
