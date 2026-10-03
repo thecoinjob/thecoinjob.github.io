@@ -70,13 +70,19 @@ window.ZeroBrowserBoard = (() => {
     }
     function visible(rows, exchange, now = Date.now(), screenMode = false) {
       const entry = board(exchange);
-      const bySymbol = new Map((Array.isArray(rows) ? rows : []).filter(r => validSymbol(r.symbol)).map(r => [r.symbol, r]));
+      const inputRows = Array.isArray(rows) ? rows : [];
+      const bySymbol = new Map(inputRows.filter(r => validSymbol(r.symbol)).map(r => [r.symbol, r]));
       if (screenMode) {
-        /* Critical rule: board population is independent of market-cap availability and participation state. */
-        const btc = bySymbol.get("BTCUSDT");
-        const automatic = automaticRows([...bySymbol.values()], now).slice(0, 31);
-        const output = btc ? [btc, ...automatic] : automatic.slice(0, 32);
-        return output.map((row, index) => ({...row, pinned_order: index === 0 ? 0 : null, automatic_mover: row.symbol !== "BTCUSDT" && !entry.saved.includes(row.symbol), retained_on_board: true}));
+        /* Diagnostic fallback rows are PARTIAL rather than LIVE. Do not discard them before the UI can display the failure mode. */
+        const partial = [...bySymbol.values()].filter(row => row.data_status === "PARTIAL");
+        if (partial.length) {
+          const btc = bySymbol.get("BTCUSDT");
+          const automatic = partial.filter(row => row.symbol !== "BTCUSDT")
+            .sort((a, b) => (Number(b.turnover_24h) || 0) - (Number(a.turnover_24h) || 0)).slice(0, 31);
+          const output = btc ? [btc, ...automatic] : automatic.slice(0, 32);
+          return output.map((row, index) => ({...row, pinned_order: index === 0 ? 0 : null, automatic_mover: row.symbol !== "BTCUSDT" && !entry.saved.includes(row.symbol), retained_on_board: true}));
+        }
+        return retainedVisible(inputRows, exchange, now);
       }
       const symbols = unique(["BTCUSDT", ...entry.saved, ...Object.keys(entry.movers)]);
       return symbols.flatMap(symbol => {
@@ -87,6 +93,20 @@ window.ZeroBrowserBoard = (() => {
         if (symbol !== "BTCUSDT" && pin < 0 && !readingsPass(row, data.filters, now)) return [];
         return [{...row, pinned_order: pin >= 0 ? pin : null, automatic_mover: !entry.saved.includes(symbol) && symbol !== "BTCUSDT", retained_on_board: true}];
       });
+    }
+    function retainedVisible(rows, exchange, now) {
+      const entry = board(exchange);
+      const output = [];
+      const facts = new Map((Array.isArray(rows) ? rows : []).map(row => [row.symbol,row]));
+      const symbols = unique(["BTCUSDT",...entry.pins,...Object.keys(entry.movers)]);
+      for (const symbol of symbols) {
+        const row = facts.get(symbol);
+        if (!row || (entry.removed[symbol] > now && symbol !== "BTCUSDT")) continue;
+        const pin = entry.pins.indexOf(symbol);
+        if (symbol !== "BTCUSDT" && pin < 0 && !readingsPass(row, data.filters, now)) continue;
+        output.push({...row,pinned_order:pin >= 0 ? pin : null,automatic_mover:!entry.saved.includes(symbol),retained_on_board:true});
+      }
+      return output;
     }
     function retainedSymbols(exchange) { return Object.keys(board(exchange).movers).filter(validSymbol); }
     function add(symbol, exchange) {
@@ -102,11 +122,10 @@ window.ZeroBrowserBoard = (() => {
     function pin(symbol, exchange, pinned) {
       symbol = String(symbol || "").toUpperCase();
       if (symbol === "BTCUSDT") return;
-      const entry = board(exchange);
       if (pinned) {
         add(symbol, exchange);
-        if (!entry.pins.includes(symbol)) entry.pins.push(symbol);
-      } else entry.pins = entry.pins.filter(item => item !== symbol);
+        const entry = board(exchange); if (!entry.pins.includes(symbol)) entry.pins.push(symbol);
+      } else board(exchange).pins = board(exchange).pins.filter(item => item !== symbol);
       save();
     }
     function remove(symbol, exchange, now = Date.now()) {
@@ -120,7 +139,7 @@ window.ZeroBrowserBoard = (() => {
     function setFilters(filters) { data.filters = validateFilters(filters); if (data.direction === "neutral") data.presets.neutral = {...data.filters}; save(); }
     function setDirection(mode) { if (!["neutral", "bullish", "bearish"].includes(mode)) throw new Error("Unsupported setup direction"); data.direction = mode; data.filters = {...data.presets[mode]}; save(); }
     function savePreset(filters) { const valid = validateFilters(filters); data.presets[data.direction] = {...valid}; data.filters = {...valid}; save(); }
-    function watchSymbols(exchange) { const entry = board(exchange); return unique(entry.saved).filter(symbol => symbol !== "BTCUSDT").slice(0, 64); }
+    function watchSymbols(exchange) { return unique(board(exchange).saved).filter(symbol => symbol !== "BTCUSDT").slice(0, 64); }
     save();
     return {visible, retainedSymbols, add, pin, remove, setFilters, setDirection, savePreset, direction: () => data.direction, defaultFilters: () => defaultPreset(data.direction), watchSymbols, board, filters: () => ({...data.filters}), persistent: () => persistent};
   }
