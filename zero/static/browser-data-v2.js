@@ -1,9 +1,9 @@
-/* Zero browser data engine v4: full Bybit/Binance perpetual universe + resilient market-cap enrichment. */
+/* Zero browser data engine v5: full perpetual universe + progressive enrichment. */
 (() => {
   "use strict";
-  const CACHE_TTL_MS=10_000, MARKET_CAP_TTL_MS=15*60_000, REQUEST_TIMEOUT_MS=12_000, MAX_CONCURRENCY=4;
+  const CACHE_TTL_MS=10_000, MARKET_CAP_TTL_MS=15*60_000, REQUEST_TIMEOUT_MS=12_000, MAX_CONCURRENCY=8;
   const ENDPOINTS={bybit:"https://api.bybit.com",binance:"https://fapi.binance.com"};
-  const cache=new Map(); let marketCapCache={at:0,values:{},source:"none"};
+  const cache=new Map(), inflight=new Map(); let marketCapCache={at:0,values:{},source:"none"};
   const finite=v=>Number.isFinite(Number(v))?Number(v):null;
   const pct=(a,b)=>a==null||b==null||b===0?null:((a/b)-1)*100;
   const sum=a=>{const n=a.filter(Number.isFinite);return n.length===a.length?n.reduce((x,y)=>x+y,0):null;};
@@ -25,53 +25,17 @@
   async function bybitRow(symbol,ticker,now){const [kp,o5,o1,cr]=await Promise.all([getJson(`${ENDPOINTS.bybit}/v5/market/kline`,{category:"linear",symbol,interval:"5",limit:1000}),getJson(`${ENDPOINTS.bybit}/v5/market/open-interest`,{category:"linear",symbol,intervalTime:"5min",limit:200}),getJson(`${ENDPOINTS.bybit}/v5/market/open-interest`,{category:"linear",symbol,intervalTime:"1h",limit:30}),getJson(`${ENDPOINTS.bybit}/v5/market/account-ratio`,{category:"linear",symbol,period:"15min",limit:2})]);const candles=stripOpen(parseBybitKlines(kp),now),m=derive(candles),o=oi(parseBybitOi(o5),parseBybitOi(o1),now),c=crowdBybit(cr,ticker),r={symbol,base:symbol.replace(/USDT$/,""),...m,price:finite(ticker?.lastPrice)??m.price,turnover_24h:finite(ticker?.turnover24h),volume_24h:finite(ticker?.volume24h),market_cap_usd:null,turnover_24h_pct:null,...o,...c,observed_at_unix:now/1000,data_status:"LIVE",source:"browser/bybit",data_quality:{candles:!!kp,oi5m:!!o5,oi1h:!!o1,crowd:!!cr}};Object.assign(r,participation(r));return r}
   async function binanceRow(symbol,ticker,now){const[kp,op,cr,fp]=await Promise.all([getJson(`${ENDPOINTS.binance}/fapi/v1/klines`,{symbol,interval:"5m",limit:1000}),getJson(`${ENDPOINTS.binance}/futures/data/openInterestHist`,{symbol,period:"5m",contractType:"PERPETUAL",limit:500}),getJson(`${ENDPOINTS.binance}/futures/data/globalLongShortAccountRatio`,{symbol,period:"15m",contractType:"PERPETUAL",limit:2}),getJson(`${ENDPOINTS.binance}/fapi/v1/premiumIndex`,{symbol})]);const candles=stripOpen(parseBinanceKlines(kp),now),m=derive(candles),or=parseBinanceOi(op),o=oi(or,[],now),c=crowdBinance(cr,{...ticker,lastFundingRate:fp?.lastFundingRate}),latest=or.at(-1)?.value??null,r={symbol,base:symbol.replace(/USDT$/,""),...m,price:finite(ticker?.lastPrice)??m.price,turnover_24h:finite(ticker?.quoteVolume),volume_24h:finite(ticker?.volume),market_cap_usd:null,turnover_24h_pct:null,...o,oi_4h_pct:pct(latest,atOrBefore(or,now-14400000)),oi_24h_pct:pct(latest,atOrBefore(or,now-86400000)),...c,observed_at_unix:now/1000,data_status:"LIVE",source:"browser/binance",data_quality:{candles:!!kp,oi5m:!!op,crowd:!!cr,funding:!!fp}};Object.assign(r,participation(r));return r}
   function normalizePerpetual(symbol,base){return{symbol:String(symbol).toUpperCase(),base:String(base||symbol).replace(/USDT$/i,"").toUpperCase()}}
-  async function discoverBybit(){
-    const found=new Map();
-    let cursor="";
-    for(let page=0;page<20;page++){
-      const p=await getJson(`${ENDPOINTS.bybit}/v5/market/instruments-info`,{category:"linear",limit:1000,cursor});
-      const list=p?.result?.list||[];
-      for(const x of list){if(x.status==="Trading"&&x.quoteCoin==="USDT"&&x.contractType==="LinearPerpetual"&&/USDT$/.test(x.symbol)){const m=normalizePerpetual(x.symbol,x.baseCoin);found.set(m.symbol,m)}}
-      const next=p?.result?.nextPageCursor;
-      if(!next||next===cursor||!list.length)break;
-      cursor=next;
-    }
-    // Bybit's linear ticker endpoint is a second, lightweight source of the live
-    // USDT-perpetual universe. It prevents a partial instruments-info response
-    // from collapsing the browser scanner to a tiny/default universe.
-    const ticker=await getJson(`${ENDPOINTS.bybit}/v5/market/tickers`,{category:"linear"});
-    for(const x of ticker?.result?.list||[]){if(/USDT$/.test(String(x.symbol||""))){const m=normalizePerpetual(x.symbol);found.set(m.symbol,m)}}
-    return [...found.values()];
-  }
+  async function discoverBybit(){const found=new Map();let cursor="";for(let page=0;page<20;page++){const p=await getJson(`${ENDPOINTS.bybit}/v5/market/instruments-info`,{category:"linear",limit:1000,cursor});const list=p?.result?.list||[];for(const x of list){if(x.status==="Trading"&&x.quoteCoin==="USDT"&&x.contractType==="LinearPerpetual"&&/USDT$/.test(x.symbol)){const m=normalizePerpetual(x.symbol,x.baseCoin);found.set(m.symbol,m)}}const next=p?.result?.nextPageCursor;if(!next||next===cursor||!list.length)break;cursor=next}const ticker=await getJson(`${ENDPOINTS.bybit}/v5/market/tickers`,{category:"linear"});for(const x of ticker?.result?.list||[]){if(/USDT$/.test(String(x.symbol||""))){const m=normalizePerpetual(x.symbol);found.set(m.symbol,m)}}return[...found.values()]}
   async function discoverBinance(){const p=await getJson(`${ENDPOINTS.binance}/fapi/v1/exchangeInfo`);return(Array.isArray(p?.symbols)?p.symbols:[]).filter(x=>x.status==="TRADING"&&x.contractType==="PERPETUAL"&&x.quoteAsset==="USDT").map(x=>({symbol:x.symbol,base:x.baseAsset||x.symbol.replace(/USDT$/i,"")}))}
   async function discover(exchange){return exchange==="binance"?discoverBinance():discoverBybit()}
-  async function marketCaps(symbols){
-    const now=Date.now();
-    if(now-marketCapCache.at<MARKET_CAP_TTL_MS)return marketCapCache;
-    const wanted=new Set(symbols.map(s=>s.replace(/USDT$/i,"").toUpperCase())),values={};
-    let source="none";
-    let geckoHadResponse=false;
-    try{
-      const p=await getJson("https://api.coingecko.com/api/v3/coins/markets",{vs_currency:"usd",order:"market_cap_desc",per_page:250,page:1,sparkline:"false"});
-      if(Array.isArray(p)){geckoHadResponse=true;for(const c of p){const s=String(c?.symbol||"").toUpperCase();if(wanted.has(s)&&finite(c?.market_cap)!=null)values[s]=finite(c.market_cap)}}
-      if(Object.keys(values).length)source="coingecko";
-    }catch(_){}
-    // CoinGecko can respond successfully but with zero matched assets in the
-    // browser. In that case CoinPaprika is the actual fallback, not a stale UI label.
-    if(!Object.keys(values).length){
-      try{
-        const p=await getJson("https://api.coinpaprika.com/v1/tickers",{quotes:"USD"},15000);
-        for(const c of Array.isArray(p)?p:[]){const s=String(c?.symbol||"").toUpperCase();const cap=finite(c?.quotes?.USD?.market_cap);if(wanted.has(s)&&cap!=null)values[s]=cap}
-        if(Object.keys(values).length)source="coinpaprika";
-      }catch(_){}
-    }
-    marketCapCache={at:now,values,source,coingecko_response:geckoHadResponse};
-    return marketCapCache;
-  }
-  async function fetchBybit(symbols){const p=await getJson(`${ENDPOINTS.bybit}/v5/market/tickers`,{category:"linear"}),map=new Map((p?.result?.list||[]).map(t=>[t.symbol,t])),wanted=symbols.filter(s=>map.has(s)),rows=await pool(wanted,s=>bybitRow(s,map.get(s),Date.now()));return rows.filter(r=>r&&!r.error)}
-  async function fetchBinance(symbols){const p=await getJson(`${ENDPOINTS.binance}/fapi/v1/ticker/24hr`),map=new Map((Array.isArray(p)?p:[]).map(t=>[t.symbol,t])),wanted=symbols.filter(s=>map.has(s)),rows=await pool(wanted,s=>binanceRow(s,map.get(s),Date.now()));return rows.filter(r=>r&&!r.error)}
-  function enrich(rows,caps){return rows.map(r=>({...r,market_cap_usd:caps[r.base]??null,turnover_24h_pct:caps[r.base]&&r.turnover_24h!=null?(r.turnover_24h/caps[r.base])*100:null}))}
-  async function snapshot({exchange="bybit",symbols=null,force=false}={}){exchange=exchange==="binance"?"binance":"bybit";const universe=symbols?.length?symbols.map(s=>String(s).toUpperCase()):await discover(exchange),unique=[...new Set(universe.filter(s=>/USDT$/.test(s)))],key=`${exchange}:${unique.join(",")}`,cached=cache.get(key);if(!force&&cached&&Date.now()-cached.at<CACHE_TTL_MS)return cached.value;const[caps,rows]=await Promise.all([marketCaps(unique),exchange==="binance"?fetchBinance(unique):fetchBybit(unique)]),value={exchange,universe_count:unique.length,market_cap_source:caps.source,market_cap_count:Object.keys(caps.values).length,rows:enrich(rows,caps.values),fetched_at_unix:Date.now()/1000,engine:"browser",source:ENDPOINTS[exchange]};cache.set(key,{at:Date.now(),value});return value}
+  async function marketCaps(symbols){const now=Date.now();if(now-marketCapCache.at<MARKET_CAP_TTL_MS)return marketCapCache;const wanted=new Set(symbols.map(s=>s.replace(/USDT$/i,"").toUpperCase())),values={};let source="none",geckoHadResponse=false;try{const p=await getJson("https://api.coingecko.com/api/v3/coins/markets",{vs_currency:"usd",order:"market_cap_desc",per_page:250,page:1,sparkline:"false"});if(Array.isArray(p)){geckoHadResponse=true;for(const c of p){const s=String(c?.symbol||"").toUpperCase();if(wanted.has(s)&&finite(c?.market_cap)!=null)values[s]=finite(c.market_cap)}}if(Object.keys(values).length)source="coingecko"}catch(_){}if(!Object.keys(values).length){try{const p=await getJson("https://api.coinpaprika.com/v1/tickers",{quotes:"USD"},15000);for(const c of Array.isArray(p)?p:[]){const s=String(c?.symbol||"").toUpperCase(),cap=finite(c?.quotes?.USD?.market_cap);if(wanted.has(s)&&cap!=null)values[s]=cap}if(Object.keys(values).length)source="coinpaprika"}catch(_){} }marketCapCache={at:now,values,source,coingecko_response:geckoHadResponse};return marketCapCache}
+  async function tickerMap(exchange){const p=exchange==="binance"?await getJson(`${ENDPOINTS.binance}/fapi/v1/ticker/24hr`):await getJson(`${ENDPOINTS.bybit}/v5/market/tickers`,{category:"linear"});return new Map((exchange==="binance"?(Array.isArray(p)?p:[]):(p?.result?.list||[])).map(t=>[t.symbol,t]))}
+  function partialRow(symbol,ticker,cap,exchange){const isB=exchange==="bybit";return{symbol,base:symbol.replace(/USDT$/,""),price:finite(ticker?.lastPrice),turnover_24h:finite(isB?ticker?.turnover24h:ticker?.quoteVolume),volume_24h:finite(isB?ticker?.volume24h:ticker?.volume),market_cap_usd:cap??null,turnover_24h_pct:cap&&finite(isB?ticker?.turnover24h:ticker?.quoteVolume)!=null?(finite(isB?ticker?.turnover24h:ticker?.quoteVolume)/cap)*100:null,data_status:"PARTIAL",source:`browser/${exchange}`,observed_at_unix:Date.now()/1000,market_data_time_unix:Date.now()/1000,oi_status:"MISSING",participation_trend:"QUIET",participation_direction:null}}
+  function enrich(rows,caps){return rows.map(r=>({...r,market_cap_usd:caps[r.base]??r.market_cap_usd??null,turnover_24h_pct:(caps[r.base]??r.market_cap_usd)&&r.turnover_24h!=null?(r.turnover_24h/(caps[r.base]??r.market_cap_usd))*100:r.turnover_24h_pct??null}))}
+  async function fetchBybit(symbols,tmap){const map=tmap||await tickerMap("bybit"),wanted=symbols.filter(s=>map.has(s)),rows=await pool(wanted,s=>bybitRow(s,map.get(s),Date.now()));return rows.filter(r=>r&&!r.error)}
+  async function fetchBinance(symbols,tmap){const map=tmap||await tickerMap("binance"),wanted=symbols.filter(s=>map.has(s)),rows=await pool(wanted,s=>binanceRow(s,map.get(s),Date.now()));return rows.filter(r=>r&&!r.error)}
+  function startEnrichment(exchange,unique,tmap,caps){const key=`${exchange}:${unique.join(",")}`;if(inflight.has(key))return;const job=(async()=>{const rows=exchange==="binance"?await fetchBinance(unique,tmap):await fetchBybit(unique,tmap);const value={exchange,universe_count:unique.length,market_cap_source:caps.source,market_cap_count:Object.keys(caps.values).length,rows:enrich(rows,caps.values),fetched_at_unix:Date.now()/1000,engine:"browser",source:ENDPOINTS[exchange],progress:{complete:true,total:unique.length,ready:rows.length}};cache.set(key,{at:Date.now(),value})})().catch(()=>{}).finally(()=>inflight.delete(key));inflight.set(key,job)}
+  async function snapshot({exchange="bybit",symbols=null,force=false}={}){exchange=exchange==="binance"?"binance":"bybit";const universe=symbols?.length?symbols.map(s=>String(s).toUpperCase()):await discover(exchange),unique=[...new Set(universe.filter(s=>/USDT$/.test(s)))],key=`${exchange}:${unique.join(",")}`,cached=cache.get(key);if(!force&&cached&&Date.now()-cached.at<CACHE_TTL_MS)return cached.value;const[tmap,caps]=await Promise.all([tickerMap(exchange),marketCaps(unique)]);const partial=unique.map(s=>partialRow(s,tmap.get(s),caps.values[s.replace(/USDT$/i,"")],exchange)).filter(r=>r.price!=null);const value={exchange,universe_count:unique.length,market_cap_source:caps.source,market_cap_count:Object.keys(caps.values).length,rows:partial,fetched_at_unix:Date.now()/1000,engine:"browser",source:ENDPOINTS[exchange],progress:{complete:false,total:unique.length,ready:partial.length}};cache.set(key,{at:Date.now(),value});startEnrichment(exchange,unique,tmap,caps);return value}
   async function diagnostics(exchange="bybit"){const u=await discover(exchange);return{exchange,universe_count:u.length,sample:u.slice(0,20),checked_at:Date.now()}}
   window.ZeroBrowserData={snapshot,diagnostics,discover,clearCache:()=>{cache.clear();marketCapCache={at:0,values:{},source:"none"}}};
 })();
