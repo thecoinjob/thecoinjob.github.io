@@ -1,27 +1,2 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Zero Scanner — Browser Test</title>
-<style>
-body{font-family:system-ui,sans-serif;margin:0;padding:24px;background:#0b0d10;color:#e8eaed}main{max-width:900px;margin:auto}h1{margin-bottom:6px}.card{border:1px solid #30343b;border-radius:12px;padding:16px;margin-top:16px}.status{font-family:monospace;white-space:pre-wrap}.ok{color:#8bd17c}.muted{color:#9aa0a6}button{padding:10px 14px;border-radius:8px;border:1px solid #555;background:#171a1f;color:#fff}</style>
-</head>
-<body><main>
-<h1>Zero Scanner</h1><div class="muted">Browser-native test environment</div>
-<div class="card"><button id="start">Start market data</button> <button id="stop">Stop</button></div>
-<div class="card"><strong>Exchange status</strong><div id="status" class="status">Not started.</div></div>
-<div class="card"><strong>Latest data</strong><div id="data" class="status muted">Waiting…</div></div>
-</main>
-<script src="../zero-static/browser/market-data.js"></script>
-<script>
-const status=document.getElementById('status'), data=document.getElementById('data'); let streams=[];
-const symbols=['BTCUSDT','ETHUSDT','SOLUSDT'];
-function setStatus(x){status.textContent=JSON.stringify(x,null,2)}
-document.getElementById('start').onclick=()=>{
- streams.forEach(s=>s.close()); streams=[];
- for(const exchange of ['bybit','binance']) streams.push(ZeroMarketData.stream(exchange,symbols,{onStatus:setStatus,onTicker:r=>data.textContent=JSON.stringify(r,null,2)}));
-};
-document.getElementById('stop').onclick=()=>{streams.forEach(s=>s.close());streams=[];status.textContent='Stopped.'};
-</script>
-</body></html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zero Scanner — Browser Test</title><style>body{font-family:system-ui,sans-serif;margin:0;padding:24px;background:#0b0d10;color:#e8eaed}main{max-width:900px;margin:auto}.card{border:1px solid #30343b;border-radius:12px;padding:16px;margin-top:16px}.status{font-family:monospace;white-space:pre-wrap}.muted{color:#9aa0a6}button{padding:10px 14px;border-radius:8px;border:1px solid #555;background:#171a1f;color:#fff}</style></head><body><main><h1>Zero Scanner</h1><div class="muted">Browser-native test environment</div><div class="card"><button id="start">Start market data</button> <button id="stop">Stop</button></div><div class="card"><strong>Exchange status</strong><div id="status" class="status">Not started.</div></div><div class="card"><strong>Latest data</strong><div id="data" class="status muted">Waiting…</div></div></main><script src="./market-data.js"></script><script>const status=document.getElementById('status'),data=document.getElementById('data');let streams=[];const symbols=['BTCUSDT','ETHUSDT','SOLUSDT'];function setStatus(x){status.textContent=JSON.stringify(x,null,2)}document.getElementById('start').onclick=()=>{streams.forEach(s=>s.close());streams=[];for(const exchange of ['bybit','binance'])streams.push(ZeroMarketData.stream(exchange,symbols,{onStatus:setStatus,onTicker:r=>data.textContent=JSON.stringify(r,null,2)}))};document.getElementById('stop').onclick=()=>{streams.forEach(s=>s.close());streams=[];status.textContent='Stopped.'};</script></body></html>
