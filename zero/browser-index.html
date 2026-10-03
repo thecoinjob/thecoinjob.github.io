@@ -4,38 +4,83 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base href="/zero/">
-  <title>Zero Scanner by TCJ</title>
-  <link rel="stylesheet" href="static/styles.css">
+  <title>Zero — Browser Data Engine Test</title>
+  <style>
+    :root{color-scheme:dark}body{font-family:system-ui,sans-serif;margin:0;background:#0b0d10;color:#e8eaed}main{max-width:1000px;margin:auto;padding:20px}.card{border:1px solid #30343b;border-radius:12px;padding:16px;margin:14px 0;background:#101318}button{padding:10px 14px;border-radius:8px;border:1px solid #555;background:#171a20;color:#fff;margin:4px}.ok{color:#79e08c}.bad{color:#ff8a8a}.muted{color:#9aa0a6}.mono{font-family:ui-monospace,monospace;white-space:pre-wrap;word-break:break-word}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.row{padding:10px 0;border-bottom:1px solid #292e35}.row:last-child{border-bottom:0}.title{font-weight:700}.small{font-size:13px}
+  </style>
 </head>
 <body>
-<main class="app">
-  <header class="topbar">
-    <h1 class="app-title">Zero Scanner by TCJ</h1>
-    <div><p id="status">Loading market data...</p></div>
-    <div class="controls">
-      <label for="exchange">Exchange</label>
-      <select id="exchange" aria-label="Exchange selector"><option value="bybit" selected>BYBIT</option><option value="binance">BINANCE</option></select>
-      <div class="search-control"><input id="search-input" list="market-suggestions" autocomplete="off" placeholder="Search coin..."><datalist id="market-suggestions"></datalist><button id="search-button" type="button">SEARCH</button><button id="search-clear" type="button">X</button></div>
-      <label for="participation-sort">Sort</label><select id="participation-sort"><option value="">Column sort</option><option value="control">Control + Participation</option><option value="recent">Recently Increasing</option></select>
-      <label for="rm-tie">RM within groups</label><select id="rm-tie"><option value="stronger">Stronger first</option><option value="weaker">Weaker first</option></select><button id="refresh">Refresh</button>
-    </div>
-    <div class="filter-toolbar"><label for="setup-direction">Setup Direction</label><select id="setup-direction"><option value="neutral">Neutral</option><option value="bullish">Bullish</option><option value="bearish">Bearish</option></select><button id="change-filters" type="button">Change filters</button><span id="order-hold-status"></span><span id="active-discovery-filters"></span></div>
-    <dialog id="filter-dialog" aria-labelledby="filter-title"><form id="filter-form"><div class="filter-dialog-head"><h2 id="filter-title">Scanner filters</h2><button type="button" id="close-filters">×</button></div><p class="filter-help">Leave a field blank for no restriction. All conditions must pass. Pinned coins stay visible.</p><div class="filter-base-grid"><label>Minimum market cap ($)<input id="min-market-cap" data-filter-key="min_market_cap_usd" type="number" min="0" step="any" placeholder="No minimum"></label><label>Maximum market cap ($)<input data-filter-key="max_market_cap_usd" type="number" min="0" step="any" placeholder="No maximum"></label><label>Minimum 24h turnover (%)<input id="min-turnover" data-filter-key="min_turnover_24h_pct" type="number" min="0" step="any" placeholder="No minimum"></label></div><div id="metric-filter-groups"></div><p id="filter-error" role="alert"></p><div class="filter-dialog-actions"><button id="default-preset" type="button">Reset to default</button><button id="save-preset" type="button">Save preset</button><button id="reset-filters" type="button">Clear filters</button><button id="cancel-filters" type="button">Cancel</button><button id="apply-discovery-filters" type="submit">Apply</button></div></form></dialog>
-    <div class="timeframe-controls"><span class="timeframe-title">PRICE</span><div id="price-timeframe-options" class="timeframe-options"></div><span class="timeframe-title">OI</span><div id="oi-timeframe-options" class="timeframe-options"></div><span class="timeframe-title">VOLUME %</span><div id="volume-timeframe-options" class="timeframe-options"></div></div>
-  </header>
-  <details id="control-alert-panel" class="control-alert-panel"><summary>Control Alerts <span id="control-alert-count">0 watching · 0 alerts</span></summary><p class="alert-help">Keep this scanner page open.</p><form id="control-alert-form" class="alert-form"><label>Coin<input id="alert-symbol" placeholder="CAP or BTC" autocomplete="off" required maxlength="60"></label><label>Exchange<select id="alert-exchange"><option value="bybit">BYBIT</option><option value="binance">BINANCE</option></select></label><label>Watch for<select id="alert-target"><option value="Bullish Control">Bullish Control</option><option value="Bearish Control">Bearish Control</option></select></label><label>Control TF<select id="alert-timeframe"><option value="15">15m</option><option value="60">1h</option><option value="240">4h</option><option value="1440">24h</option></select></label><button type="submit">Start watching</button><button type="button" id="alert-check-now">Check now</button><button type="button" id="alert-sound">Enable sound</button><button type="button" id="alert-test-sound">Test sound</button></form><p id="alert-message" role="status"></p><div class="alert-lists"><div><h3>Watches</h3><div id="control-watch-list"></div></div><div><h3>Alerts</h3><div id="control-alert-list"></div></div></div></details><button id="control-alert-notice" class="control-alert-notice hidden" type="button"></button>
-  <section id="search-shell" class="board-shell search-shell hidden"><div class="board-head"><div><h2>Search Result</h2><p id="search-status"></p></div></div><div class="table-wrap"><table class="board-table"><colgroup data-dynamic-cols></colgroup><thead id="search-head"></thead><tbody id="search-board"></tbody></table></div></section>
-  <section class="board-shell"><div class="board-head"><div><h2>Main Board</h2><p id="board-note">BTC first · Pinned coins stay fixed · Your settings are saved in this browser</p></div><form id="add-form" class="add-form"><input id="symbol-input" name="symbol" autocomplete="off" placeholder="Add symbol: SOL or SOLUSDT"><button type="submit">ADD</button></form></div><div class="table-wrap"><table class="board-table"><colgroup data-dynamic-cols></colgroup><thead id="main-head"></thead><tbody id="main-board"></tbody></table></div></section>
-</main>
+<main>
+  <h1>Zero — Browser Data Engine Test</h1>
+  <p class="muted">This page intentionally bypasses Render. It tests whether GitHub Pages can reach public exchange market-data APIs directly from the user's browser.</p>
+
+  <div class="card">
+    <button id="test-bybit">Test BYBIT</button>
+    <button id="test-binance">Test BINANCE</button>
+    <button id="test-both">Test BOTH</button>
+    <button id="clear">Clear</button>
+  </div>
+
+  <div class="grid">
+    <section class="card"><div class="title">BYBIT</div><div id="bybit" class="mono muted">Not tested.</div></section>
+    <section class="card"><div class="title">BINANCE</div><div id="binance" class="mono muted">Not tested.</div></section>
+  </div>
+
+  <div class="card">
+    <div class="title">What this test proves</div>
+    <p class="small">1. HTTPS REST access from GitHub Pages. 2. Candle data availability. 3. WebSocket availability. 4. Whether the failure is exchange/network/CORS rather than Render.</p>
+    <div id="overall" class="mono muted">Waiting for test...</div>
+  </div>
+
+<script src="market-data.js"></script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {scope:'/zero/'}).catch(console.error);
+const out={bybit:document.getElementById('bybit'),binance:document.getElementById('binance'),overall:document.getElementById('overall')};
+function show(el,text,ok){el.className='mono '+(ok?'ok':'bad');el.textContent=text}
+async function testRest(exchange){
+  const started=performance.now();
+  try{
+    const rows=await ZeroMarketData.candles(exchange,'BTCUSDT','5',3);
+    if(!rows.length) throw new Error('API returned zero candles');
+    const last=rows[rows.length-1];
+    const ms=Math.round(performance.now()-started);
+    show(out[exchange],`REST: OK\nCandles: ${rows.length}\nLatest close: ${last.close}\nLatest candle time: ${new Date(last.time).toISOString()}\nLatency: ${ms} ms`,true);
+    return true;
+  }catch(error){
+    show(out[exchange],`REST: FAILED\n${error?.message||error}\n\nBrowser URL: ${location.href}`,false);
+    return false;
+  }
+}
+function testWs(exchange){
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=(ok,msg)=>{if(done)return;done=true;clearTimeout(timer);resolve({ok,msg})};
+    const timer=setTimeout(()=>finish(false,'WebSocket: TIMEOUT after 8 seconds'),8000);
+    const stream=ZeroMarketData.stream(exchange,['BTCUSDT'],{
+      onStatus:s=>{if(s.status==='OPEN') finish(true,'WebSocket: OPEN')},
+      onTicker:r=>finish(true,`WebSocket: OPEN + ticker received (${r.symbol} ${r.price})`)
+    });
+    setTimeout(()=>stream.close(),8200);
+  });
+}
+async function test(exchange){
+  const restOk=await testRest(exchange);
+  const ws=await testWs(exchange);
+  const current=out[exchange].textContent;
+  out[exchange].textContent=current+'\n'+ws.msg;
+  return restOk&&ws.ok;
+}
+async function run(which){
+  const exchanges=which==='both'?['bybit','binance']:[which];
+  overall.textContent='Running direct browser tests...';
+  const results=[];
+  for(const ex of exchanges) results.push([ex,await test(ex)]);
+  overall.textContent=results.map(([ex,ok])=>`${ex.toUpperCase()}: ${ok?'PASS':'FAIL'}`).join('\n')+'\n\nNo Render request is made by this page.';
+}
+document.getElementById('test-bybit').onclick=()=>run('bybit');
+document.getElementById('test-binance').onclick=()=>run('binance');
+document.getElementById('test-both').onclick=()=>run('both');
+document.getElementById('clear').onclick=()=>{out.bybit.textContent='Not tested.';out.binance.textContent='Not tested.';out.overall.textContent='Waiting for test...';out.bybit.className=out.binance.className='mono muted';};
 </script>
-<script src="static/browser-board.js"></script>
-<script src="static/interaction-hold.js"></script>
-<script src="static/control-alerts.js"></script>
-<script src="static/app.js"></script>
-<script src="static/directional-participation.js"></script>
-<script src="static/market-ranking.js"></script>
-<script src="static/hints-toggle.js"></script>
+</main>
 </body>
 </html>
