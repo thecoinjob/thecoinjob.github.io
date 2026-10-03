@@ -94,7 +94,7 @@ window.ZeroBrowserBoard = (() => {
         && now - row.observed_at_unix * 1000 <= 180_000 && now - row.market_data_time_unix * 1000 <= 180_000
         && ["INCREASING", "ACTIVE", "QUIET", "DECREASING"].includes(row.participation_trend);
     }
-    function update(rows, exchange, now) {
+    function capFallbackSymbols(rows, now) {\n      const withCap = rows.filter(row => typeof row.market_cap_usd === "number" && row.market_cap_usd > 0);\n      const coverageTarget = Math.min(10, Math.max(1, Math.ceil(rows.length * 0.10)));\n      if (withCap.length >= coverageTarget) return new Set();\n      return new Set(rows.filter(row => row.symbol !== "BTCUSDT" && fresh(row, now) && Number.isFinite(row.turnover_24h) && row.turnover_24h > 0)\n        .sort((a,b) => Number(b.turnover_24h) - Number(a.turnover_24h)).slice(0,32).map(row => row.symbol));\n    }\n    function update(rows, exchange, now) {
       const entry = board(exchange);
       for (const [symbol, until] of Object.entries(entry.removed)) if (until <= now) delete entry.removed[symbol];
       for (const row of rows) {
@@ -102,7 +102,7 @@ window.ZeroBrowserBoard = (() => {
         if (!fresh(row, now)) continue;
         const active = ["INCREASING", "ACTIVE"].includes(row.participation_trend);
         const existing = Object.hasOwn(entry.movers, row.symbol);
-        if (active && eligible(row) && (existing || Object.keys(entry.movers).length < 32)) {
+        if (active && (eligible(row) || fallback.has(row.symbol)) && (existing || Object.keys(entry.movers).length < 32)) {
           entry.movers[row.symbol] = Math.max(entry.movers[row.symbol] || 0, row.observed_at_unix * 1000);
         } else if (existing && !active && now - entry.movers[row.symbol] >= FOUR_HOURS) {
           delete entry.movers[row.symbol];
@@ -130,7 +130,7 @@ window.ZeroBrowserBoard = (() => {
           else continue;
         }
         if (entry.pins.includes(row.symbol) && !entry.retained[row.symbol]) entry.retained[row.symbol] = {since:now,quiet:null,row};
-        if (!entry.retained[row.symbol] && eligible(row) && readingsPass(row,data.filters,now)) entry.retained[row.symbol] = {since:now,quiet:null,row};
+        if (!entry.retained[row.symbol] && (eligible(row) || fallback.has(row.symbol)) && readingsPass(row,data.filters,now)) entry.retained[row.symbol] = {since:now,quiet:null,row};
         const held = entry.retained[row.symbol];
         if (!held) continue;
         if (!held.row || row.observed_at_unix >= held.row.observed_at_unix) held.row = row;
@@ -168,7 +168,7 @@ window.ZeroBrowserBoard = (() => {
         const row = bySymbol.get(symbol);
         if (!row) return [];
         const pin = entry.pins.indexOf(symbol);
-        if (symbol !== "BTCUSDT" && pin < 0 && (!eligible(row) || entry.removed[symbol] > now || (screenMode && !readingsPass(row, data.filters, now)))) return [];
+        if (symbol !== "BTCUSDT" && pin < 0 && (!eligible(row) && !fallback.has(symbol) || entry.removed[symbol] > now || (screenMode && !readingsPass(row, data.filters, now)))) return [];
         return [{...row, pinned_order: pin >= 0 ? pin : null, automatic_mover: !entry.saved.includes(symbol) && symbol !== "BTCUSDT"}];
       });
     }
