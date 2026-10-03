@@ -21,7 +21,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p zero/static
-          base="https://raw.githubusercontent.com/thecoinjob/zero/main/app/static"
+          base="https://api.github.com/repos/thecoinjob/zero/contents/app/static"
           for file in \
             index.html \
             styles.css \
@@ -36,7 +36,7 @@ jobs:
             landing.css \
             dashboard-preview.webp
           do
-            curl -fsSL "$base/$file" -o "zero/static/$file"
+            curl -fsSL -H 'Accept: application/vnd.github.raw+json' "$base/$file?ref=main" -o "zero/static/$file"
           done
 
       - name: Commit synced assets
