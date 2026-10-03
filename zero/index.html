@@ -1,34 +1,20 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zero Scanner by TCJ</title><style>
-:root{color-scheme:dark}body{font-family:system-ui,sans-serif;margin:0;background:#0b0d10;color:#e8eaed}main{max-width:1400px;margin:auto;padding:18px}.top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.top h1{margin:0 18px 0 0}.card{border:1px solid #30343b;border-radius:12px;padding:14px;margin-top:14px;background:#101318}select,button{background:#171a20;color:#fff;border:1px solid #4b515b;border-radius:8px;padding:9px 12px}#status{color:#9aa0a6}.table-wrap{overflow:auto}.board{width:100%;border-collapse:collapse;min-width:1000px}.board th,.board td{padding:10px 9px;border-bottom:1px solid #292e35;text-align:right;white-space:nowrap}.board th{position:sticky;top:0;background:#15191f;text-align:right;font-size:12px}.board th:first-child,.board td:first-child{text-align:left}.control{font-weight:700}.bull{color:#77d68b}.bear{color:#ff8080}.muted{color:#8e96a3}.small{font-size:12px}.loading{opacity:.7}.error{color:#ff9a9a}.legend{display:flex;gap:16px;flex-wrap:wrap;color:#9aa0a6;font-size:12px}
-</style></head><body><main>
-<div class="top"><h1>Zero Scanner by TCJ</h1><label>Exchange <select id="exchange"><option value="bybit">BYBIT</option><option value="binance">BINANCE</option></select></label><button id="refresh">Refresh</button><span id="status">Ready</span></div>
-<div class="card"><div class="legend"><span>Browser-native calculation</span><span>SV1 + SCC</span><span>5M / 15M structure</span><span>RM / BTC LINK / EXPANSION</span></div></div>
-<div class="card"><div class="table-wrap"><table class="board"><thead><tr><th>SYMBOL</th><th>PRICE</th><th>5M</th><th>15M</th><th>RM</th><th>BTC LINK</th><th>EXPANSION</th><th>5M CONTROL</th><th>15M CONTROL</th></tr></thead><tbody id="board"></tbody></table></div></div>
-<script src="./market-data.js"></script><script src="./brain.js"></script><script src="./scc.js"></script><script>
-const SYMBOLS={bybit:['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','HYPEUSDT','ZECUSDT','DOGEUSDT','SUIUSDT','BCHUSDT','LINKUSDT','ADAUSDT','LTCUSDT'],binance:['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','HYPEUSDT','ZECUSDT','DOGEUSDT','SUIUSDT','BCHUSDT','LINKUSDT','ADAUSDT','LTCUSDT']};
-const board=document.getElementById('board'),statusEl=document.getElementById('status');
-const fmt=v=>v==null?'—':(Math.abs(v)>=1000?v.toLocaleString(undefined,{maximumFractionDigits:2}):v.toFixed(v>=100?2:4));
-const pct=v=>v==null?'—':`${v>=0?'+':''}${v.toFixed(2)}%`;
-function candleForScc(rows){return rows.map(r=>({open_time_ms:r.time,open:r.open,high:r.high,low:r.low,close:r.close,volume:r.volume}));}
-async function loadSymbol(exchange,symbol){
-  const [c5,c15,c1]=await Promise.all([ZeroMarketData.candles(exchange,symbol,'5',300),ZeroMarketData.candles(exchange,symbol,'15',300),ZeroMarketData.candles(exchange,symbol,'1',120)]);
-  const now=Date.now(),p5=c5.length?c5[c5.length-1].close:null,p15=c15.length?c15[c15.length-1].close:null;
-  const base5=c5.length>1?c5[c5.length-2].close:null,base15=c15.length>1?c15[c15.length-2].close:null;
-  const move5=base5?((p5-base5)/base5)*100:null,move15=base15?((p15-base15)/base15)*100:null;
-  const btc15=await ZeroMarketData.candles(exchange,'BTCUSDT','15',300);
-  const btc1=await ZeroMarketData.candles(exchange,'BTCUSDT','1',120);
-  const btc15Move=btc15.length>1?((btc15[btc15.length-1].close-btc15[btc15.length-2].close)/btc15[btc15.length-2].close)*100:null;
-  const coinReturns=ZeroBrain.oneMinuteReturns(c1.map(r=>[r.time,r.close]));
-  const btcReturns=ZeroBrain.oneMinuteReturns(btc1.map(r=>[r.time,r.close]));
-  const link=ZeroBrain.btcLinkDetails(btcReturns,coinReturns).score;
-  const rm=ZeroBrain.relativeMoveVsBtc(btc15Move,move15);
-  const expansion=ZeroBrain.expansionDetails(move15,c15.map(r=>[r.time,r.close]));
-  const s5=ZeroSCC.detectSCC(candleForScc(c5),5,now),s15=ZeroSCC.detectSCC(candleForScc(c15),15,now);
-  return {symbol,p5,move5,move15,rm,link,expansion,s5,s15};
-}
-function controlHtml(x){if(!x)return'—';const cls=x.includes('Bullish')?'bull':x.includes('Bearish')?'bear':'muted';return`<span class="${cls} control">${x.replace(' Control','')}</span>`}
-function rowHtml(x){return`<tr><td><b>${x.symbol.replace('USDT','')}</b></td><td>${fmt(x.p5)}</td><td>${pct(x.move5)}</td><td>${pct(x.move15)}</td><td>${pct(x.rm)}</td><td>${x.link==null?'—':x.link}</td><td>${x.expansion?.label||'—'}</td><td>${controlHtml(x.s5?.control)}</td><td>${controlHtml(x.s15?.control)}</td></tr>`}
-async function run(){const ex=document.getElementById('exchange').value;const symbols=SYMBOLS[ex];statusEl.textContent=`Loading ${ex}…`;board.innerHTML=`<tr><td colspan="9" class="loading">Loading browser calculations…</td></tr>`;const out=[];for(const s of symbols){try{out.push(await loadSymbol(ex,s))}catch(e){out.push({symbol:s,error:e.message})}}out.sort((a,b)=>(b.rm??-999)-(a.rm??-999));board.innerHTML=out.map(x=>x.error?`<tr><td>${x.symbol}</td><td colspan="8" class="error">${x.error}</td></tr>`:rowHtml(x)).join('');statusEl.textContent=`${ex.toUpperCase()} · ${out.length} symbols · calculated in this browser · ${new Date().toLocaleTimeString()}`}
-document.getElementById('refresh').onclick=run;document.getElementById('exchange').onchange=run;run();
-</script></main></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zero Scanner by TCJ</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; background: #0b0d10; }
+    body { overflow: hidden; }
+    iframe { display: block; width: 100%; height: 100%; border: 0; }
+  </style>
+</head>
+<body>
+  <iframe
+    src="https://zero-scan1.onrender.com/scanner"
+    title="Zero Scanner by TCJ"
+    allow="autoplay; clipboard-read; clipboard-write"
+  ></iframe>
+</body>
+</html>
