@@ -1,0 +1,44 @@
+name: Sync Zero frontend
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/sync-zero-frontend.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Pages repo
+        uses: actions/checkout@v4
+
+      - name: Download Zero frontend assets
+        env:
+          ZERO_REPO_TOKEN: ${{ secrets.ZERO_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$ZERO_REPO_TOKEN"
+          rm -rf /tmp/zero-source
+          git clone --depth 1 "https://x-access-token:${ZERO_REPO_TOKEN}@github.com/thecoinjob/zero.git" /tmp/zero-source
+          rm -rf zero/static
+          mkdir -p zero/static
+          cp -R /tmp/zero-source/app/static/. zero/static/
+          cp /tmp/zero-source/app/static/index.html zero/index.html 2>/dev/null || true
+          rm -rf /tmp/zero-source
+
+      - name: Commit synced assets
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add zero/static zero/index.html
+          if git diff --cached --quiet; then
+            echo "No frontend changes."
+          else
+            git commit -m "Sync Zero frontend from private zero repo"
+            git push
+          fi
