@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zero Browser Engine Test</title>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#111;color:#eee;margin:0;padding:20px}
+    button{padding:10px 14px;margin-right:8px}
+    #status{margin:14px 0;color:#9ecbff}
+    table{border-collapse:collapse;width:100%;font-size:13px}
+    th,td{border:1px solid #333;padding:6px;text-align:right}
+    th:first-child,td:first-child{text-align:left}
+    .up{color:#6ee7a0}.down{color:#ff8a8a}.bad{color:#ff7070}
+    pre{white-space:pre-wrap;background:#181818;padding:12px;overflow:auto}
+  </style>
+</head>
+<body>
+  <h1>Zero — Browser Data Engine Test</h1>
+  <p>This page bypasses Render. It calls public exchange market-data APIs directly from this browser.</p>
+  <button id="bybit">Test BYBIT</button>
+  <button id="binance">Test BINANCE</button>
+  <button id="full-bybit">Load Zero browser snapshot — BYBIT</button>
+  <button id="full-binance">Load Zero browser snapshot — BINANCE</button>
+  <div id="status">Ready.</div>
+  <div id="table"></div>
+  <details><summary>Raw diagnostic</summary><pre id="raw"></pre></details>
+  <script src="/static/browser-data.js?v=20261003"></script>
+  <script>
+    const status = document.getElementById('status');
+    const table = document.getElementById('table');
+    const raw = document.getElementById('raw');
+    const fmt = v => v == null || !Number.isFinite(Number(v)) ? '—' : Number(v).toFixed(2);
+    function cls(v){return Number(v)>0?'up':Number(v)<0?'down':''}
+    function render(value){
+      const rows=value.rows||[];
+      table.innerHTML=`<table><thead><tr><th>SYMBOL</th><th>PRICE</th><th>5M</th><th>15M</th><th>1H</th><th>4H</th><th>24H</th><th>OI 5M</th><th>OI 15M</th><th>OI 1H</th><th>OI 4H</th><th>OI 24H</th><th>VOL 15M</th><th>VOL 1H</th><th>CAP</th><th>TURNOVER/CAP</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.symbol}</td><td>${r.price==null?'—':Number(r.price).toLocaleString()}</td><td class="${cls(r.change_5m_pct)}">${fmt(r.change_5m_pct)}%</td><td class="${cls(r.change_15m_pct)}">${fmt(r.change_15m_pct)}%</td><td class="${cls(r.change_1h_pct)}">${fmt(r.change_1h_pct)}%</td><td class="${cls(r.change_4h_pct)}">${fmt(r.change_4h_pct)}%</td><td class="${cls(r.change_24h_pct)}">${fmt(r.change_24h_pct)}%</td><td class="${cls(r.oi_5m_pct)}">${fmt(r.oi_5m_pct)}%</td><td class="${cls(r.oi_15m_pct)}">${fmt(r.oi_15m_pct)}%</td><td class="${cls(r.oi_1h_pct)}">${fmt(r.oi_1h_pct)}%</td><td class="${cls(r.oi_4h_pct)}">${fmt(r.oi_4h_pct)}%</td><td class="${cls(r.oi_24h_pct)}">${fmt(r.oi_24h_pct)}%</td><td class="${cls(r.volume_15m_pct)}">${fmt(r.volume_15m_pct)}%</td><td class="${cls(r.volume_1h_pct)}">${fmt(r.volume_1h_pct)}%</td><td>${r.market_cap_usd==null?'—':Math.round(r.market_cap_usd).toLocaleString()}</td><td>${r.turnover_24h_pct==null?'—':fmt(r.turnover_24h_pct)+'%'}</td></tr>`).join('')}</tbody></table>`;
+      raw.textContent=JSON.stringify(value,null,2);
+    }
+    async function run(exchange, full){
+      status.textContent=`Running ${exchange.toUpperCase()} browser engine…`;
+      table.innerHTML='';
+      try{
+        const value=full?await window.ZeroBrowserData.snapshot({exchange,force:true}):await window.ZeroBrowserData.diagnostics(exchange);
+        if(full){render(value);status.textContent=`Browser engine OK — ${value.rows.length} rows from ${value.source}. Render was not used.`;}
+        else{raw.textContent=JSON.stringify(value,null,2);status.textContent=value.ok?`Direct ${exchange.toUpperCase()} diagnostic OK.`:`Direct ${exchange.toUpperCase()} diagnostic returned no row.`;}
+      }catch(error){status.textContent=`Browser engine failed: ${error.message||error}`;status.className='bad';raw.textContent=String(error.stack||error);}
+    }
+    document.getElementById('bybit').onclick=()=>run('bybit',false);
+    document.getElementById('binance').onclick=()=>run('binance',false);
+    document.getElementById('full-bybit').onclick=()=>run('bybit',true);
+    document.getElementById('full-binance').onclick=()=>run('binance',true);
+  </script>
+</body>
+</html>
