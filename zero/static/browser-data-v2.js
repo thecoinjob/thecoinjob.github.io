@@ -1,160 +1,37 @@
-/*
- * Zero browser data engine v2.
- * Same output contract as browser-data.js, but exchange sub-requests are
- * isolated so one failed auxiliary endpoint never removes the whole market.
- */
+/* Zero browser data engine v3: dynamic Bybit/Binance perpetual universe + resilient market-cap enrichment. */
 (() => {
   "use strict";
-
-  const DEFAULT_SYMBOLS = [
-    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", "HYPEUSDT",
-    "ZECUSDT", "DOGEUSDT", "SUIUSDT", "BCHUSDT", "LINKUSDT", "ADAUSDT", "LTCUSDT",
-  ];
-  const CACHE_TTL_MS = 10_000;
-  const MARKET_CAP_TTL_MS = 15 * 60_000;
-  const REQUEST_TIMEOUT_MS = 5_000;
-  const MAX_CONCURRENCY = 4;
-  const ENDPOINTS = { bybit: "https://api.bybit.com", binance: "https://fapi.binance.com" };
-  const cache = new Map();
-  let marketCapCache = { at: 0, values: {} };
-
-  const finite = value => { const n = Number(value); return Number.isFinite(n) ? n : null; };
-  const pct = (current, previous) => current == null || previous == null || previous === 0 ? null : ((current / previous) - 1) * 100;
-  const sum = values => { const nums = values.filter(v => Number.isFinite(v)); return nums.length === values.length ? nums.reduce((a,b) => a+b, 0) : null; };
-  const sorted = rows => [...rows].sort((a,b) => a.time - b.time);
-
-  async function getJson(url, params = {}) {
-    const query = new URLSearchParams();
-    for (const [key,value] of Object.entries(params)) if (value !== undefined && value !== null && value !== "") query.set(key, String(value));
-    const full = query.toString() ? `${url}?${query}` : url;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    try {
-      const response = await fetch(full, { method:"GET", cache:"no-store", signal:controller.signal, headers:{Accept:"application/json"} });
-      if (!response.ok) return null;
-      return await response.json();
-    } catch (_) {
-      return null;
-    } finally { clearTimeout(timer); }
-  }
-
-  async function pool(items, worker, concurrency = MAX_CONCURRENCY) {
-    const results = new Array(items.length); let cursor = 0;
-    async function runner() {
-      while (true) {
-        const index = cursor++;
-        if (index >= items.length) return;
-        try { results[index] = await worker(items[index], index); }
-        catch (error) { results[index] = { error: error instanceof Error ? error.message : String(error) }; }
-      }
-    }
-    await Promise.all(Array.from({length:Math.min(concurrency,items.length)}, runner));
-    return results;
-  }
-
-  function parseBybitKlines(payload) {
-    const list = payload?.result?.list || [];
-    return sorted(list.map(row => ({time:Number(row[0]),open:finite(row[1]),high:finite(row[2]),low:finite(row[3]),close:finite(row[4]),volume:finite(row[5]),turnover:finite(row[6])})).filter(row => Number.isFinite(row.time)));
-  }
-  function parseBinanceKlines(payload) {
-    return sorted((Array.isArray(payload) ? payload : []).map(row => ({time:Number(row[0]),open:finite(row[1]),high:finite(row[2]),low:finite(row[3]),close:finite(row[4]),volume:finite(row[5]),turnover:finite(row[7])})).filter(row => Number.isFinite(row.time)));
-  }
-  function stripOpenCandle(candles, now = Date.now(), intervalMs = 300_000) { return candles.filter(c => c.time + intervalMs <= now + 1_000); }
-  function windowStats(candles, count) {
-    if (candles.length < count * 2) return {change:null,volumeChange:null};
-    const current=candles.slice(-count), previous=candles.slice(-count*2,-count);
-    const currentClose=current.at(-1)?.close, previousClose=previous.at(-1)?.close;
-    const currentVolume=sum(current.map(c=>c.turnover ?? (c.close!=null&&c.volume!=null?c.close*c.volume:NaN)));
-    const previousVolume=sum(previous.map(c=>c.turnover ?? (c.close!=null&&c.volume!=null?c.close*c.volume:NaN)));
-    return {change:pct(currentClose,previousClose),volumeChange:pct(currentVolume,previousVolume)};
-  }
-  function derivePriceAndVolume(candles) {
-    const windows={"5m":1,"15m":3,"1h":12,"4h":48,"24h":288}, out={};
-    for(const [tf,count] of Object.entries(windows)){const s=windowStats(candles,count);out[`change_${tf}_pct`]=s.change;out[`volume_${tf}_pct`]=s.volumeChange;}
-    const last=candles.at(-1); out.price=last?.close??null; out.market_data_time_unix=last?last.time/1000:0; return out;
-  }
-  function parseBybitOi(payload) { return (payload?.result?.list||[]).map(row=>({time:Number(row.timestamp),value:finite(row.singleOpenInterest??row.openInterest)})).filter(r=>Number.isFinite(r.time)&&r.value!=null).sort((a,b)=>a.time-b.time); }
-  function parseBinanceOi(payload) { return (Array.isArray(payload)?payload:[]).map(row=>({time:Number(row.timestamp),value:finite(row.sumOpenInterestValue??row.sumOpenInterest)})).filter(r=>Number.isFinite(r.time)&&r.value!=null).sort((a,b)=>a.time-b.time); }
-  function oiAtOrBefore(rows,target){let answer=null;for(const row of rows){if(row.time<=target)answer=row.value;else break;}return answer;}
-  function deriveOi(rows5m,rows1h,now=Date.now()){
-    const latest=rows5m.at(-1)?.value??rows1h.at(-1)?.value??null, source5m=rows5m.length?rows5m:rows1h;
-    const valueAt=ms=>oiAtOrBefore(source5m,now-ms);
-    return {oi_5m_pct:pct(latest,valueAt(5*60_000)),oi_15m_pct:pct(latest,valueAt(15*60_000)),oi_1h_pct:pct(latest,valueAt(60*60_000)),oi_4h_pct:pct(latest,oiAtOrBefore(rows1h,now-4*60*60_000)),oi_24h_pct:pct(latest,oiAtOrBefore(rows1h,now-24*60*60_000)),oi_status:latest!=null?"CURRENT":"MISSING",oi_reference_time_ms:rows5m.at(-1)?.time??rows1h.at(-1)?.time??0};
-  }
-  function crowdFromBybit(payload,ticker){const latest=payload?.result?.list?.[0],buy=finite(latest?.buyRatio),sell=finite(latest?.sellRatio);return {funding_rate:finite(ticker?.fundingRate),long_ratio:buy,short_ratio:sell,crowd_ratio:buy!=null&&sell!=null&&sell!==0?buy/sell:null,crowd_timestamp:finite(latest?.timestamp)};}
-  function crowdFromBinance(payload,ticker){const latest=Array.isArray(payload)?payload.at(-1):null,longRatio=finite(latest?.longAccount),shortRatio=finite(latest?.shortAccount);return {funding_rate:finite(ticker?.lastFundingRate),long_ratio:longRatio,short_ratio:shortRatio,crowd_ratio:longRatio!=null&&shortRatio!=null&&shortRatio!==0?longRatio/shortRatio:null,crowd_timestamp:finite(latest?.timestamp)};}
-  function participationFromRow(row){
-    const price=finite(row.change_15m_pct),oi=finite(row.oi_15m_pct),volume=finite(row.volume_15m_pct);
-    if(price==null||oi==null||volume==null)return {participation_trend:"QUIET",participation_direction:null};
-    const activity=volume>20||Math.abs(oi)>0.3;
-    if(!activity)return {participation_trend:"QUIET",participation_direction:null};
-    if(price>0&&oi>0)return {participation_trend:"INCREASING",participation_direction:"BULLISH"};
-    if(price<0&&oi>0)return {participation_trend:"INCREASING",participation_direction:"BEARISH"};
-    if(oi<0&&Math.abs(price)>0.1)return {participation_trend:"DECREASING",participation_direction:price>0?"BULLISH":"BEARISH"};
-    return {participation_trend:"ACTIVE",participation_direction:price>=0?"BULLISH":"BEARISH"};
-  }
-
-  async function bybitRow(symbol,ticker,now){
-    const [klinePayload,oi5Payload,oi1hPayload,ratioPayload]=await Promise.all([
-      getJson(`${ENDPOINTS.bybit}/v5/market/kline`,{category:"linear",symbol,interval:"5",limit:1000}),
-      getJson(`${ENDPOINTS.bybit}/v5/market/open-interest`,{category:"linear",symbol,intervalTime:"5min",limit:200}),
-      getJson(`${ENDPOINTS.bybit}/v5/market/open-interest`,{category:"linear",symbol,intervalTime:"1h",limit:30}),
-      getJson(`${ENDPOINTS.bybit}/v5/market/account-ratio`,{category:"linear",symbol,period:"15min",limit:2}),
-    ]);
-    const candles=stripOpenCandle(parseBybitKlines(klinePayload),now), market=derivePriceAndVolume(candles), oi=deriveOi(parseBybitOi(oi5Payload),parseBybitOi(oi1hPayload),now), crowd=crowdFromBybit(ratioPayload,ticker);
-    const row={symbol,base:symbol.replace(/USDT$/,""),...market,price:finite(ticker?.lastPrice)??market.price,turnover_24h:finite(ticker?.turnover24h),volume_24h:finite(ticker?.volume24h),market_cap_usd:null,turnover_24h_pct:null,...oi,...crowd,observed_at_unix:now/1000,data_status:"LIVE",source:"browser/bybit"};
-    Object.assign(row,participationFromRow(row));
-    row.data_quality={candles:!!klinePayload,oi5m:!!oi5Payload,oi1h:!!oi1hPayload,crowd:!!ratioPayload};
-    return row;
-  }
-
-  async function binanceRow(symbol,ticker,now){
-    const [klinePayload,oiPayload,ratioPayload,fundingPayload]=await Promise.all([
-      getJson(`${ENDPOINTS.binance}/fapi/v1/klines`,{symbol,interval:"5m",limit:1000}),
-      getJson(`${ENDPOINTS.binance}/futures/data/openInterestHist`,{symbol,period:"5m",contractType:"PERPETUAL",limit:500}),
-      getJson(`${ENDPOINTS.binance}/futures/data/globalLongShortAccountRatio`,{symbol,period:"15m",contractType:"PERPETUAL",limit:2}),
-      getJson(`${ENDPOINTS.binance}/fapi/v1/premiumIndex`,{symbol}),
-    ]);
-    const candles=stripOpenCandle(parseBinanceKlines(klinePayload),now),market=derivePriceAndVolume(candles),oiRows=parseBinanceOi(oiPayload),oi=deriveOi(oiRows,[],now),crowd=crowdFromBinance(ratioPayload,{...ticker,lastFundingRate:fundingPayload?.lastFundingRate});
-    const latest=oiRows.at(-1)?.value??null;
-    const row={symbol,base:symbol.replace(/USDT$/,""),...market,price:finite(ticker?.lastPrice)??market.price,turnover_24h:finite(ticker?.quoteVolume),volume_24h:finite(ticker?.volume),market_cap_usd:null,turnover_24h_pct:null,...oi,...crowd,observed_at_unix:now/1000,data_status:"LIVE",source:"browser/binance"};
-    row.oi_4h_pct=pct(latest,oiAtOrBefore(oiRows,now-4*60*60_000));row.oi_24h_pct=pct(latest,oiAtOrBefore(oiRows,now-24*60*60_000));Object.assign(row,participationFromRow(row));
-    row.data_quality={candles:!!klinePayload,oi5m:!!oiPayload,crowd:!!ratioPayload,funding:!!fundingPayload};return row;
-  }
-
-  async function marketCaps(symbols){
-    const now=Date.now(); if(now-marketCapCache.at<MARKET_CAP_TTL_MS)return marketCapCache.values;
-    try{
-      const rows=await getJson("https://api.coingecko.com/api/v3/coins/markets",{vs_currency:"usd",order:"market_cap_desc",per_page:250,page:1,sparkline:"false"}),values={},wanted=new Set(symbols.map(s=>s.replace(/USDT$/i,"").toUpperCase()));
-      for(const coin of Array.isArray(rows)?rows:[]){const symbol=String(coin?.symbol||"").toUpperCase();if(wanted.has(symbol)&&finite(coin?.market_cap)!=null)values[symbol]=finite(coin.market_cap);}
-      marketCapCache={at:now,values};return values;
-    }catch(_){return marketCapCache.values;}
-  }
-
-  async function fetchBybit(symbols){
-    const tickerPayload=await getJson(`${ENDPOINTS.bybit}/v5/market/tickers`,{category:"linear"});
-    const tickerMap=new Map((tickerPayload?.result?.list||[]).map(t=>[t.symbol,t]));
-    const wanted=symbols.filter(symbol=>tickerMap.has(symbol));
-    const results=await pool(wanted,symbol=>bybitRow(symbol,tickerMap.get(symbol),Date.now()));
-    return results.filter(row=>row&&!row.error);
-  }
-  async function fetchBinance(symbols){
-    const tickerPayload=await getJson(`${ENDPOINTS.binance}/fapi/v1/ticker/24hr`);
-    const tickerMap=new Map((Array.isArray(tickerPayload)?tickerPayload:[]).map(t=>[t.symbol,t]));
-    const wanted=symbols.filter(symbol=>tickerMap.has(symbol));
-    const results=await pool(wanted,symbol=>binanceRow(symbol,tickerMap.get(symbol),Date.now()));
-    return results.filter(row=>row&&!row.error);
-  }
-  function enrich(rows,caps){return rows.map(row=>{const cap=caps[row.base]??null;return {...row,market_cap_usd:cap,turnover_24h_pct:cap&&row.turnover_24h!=null?(row.turnover_24h/cap)*100:null};});}
-
-  async function snapshot({exchange="bybit",symbols=DEFAULT_SYMBOLS,force=false}={}){
-    exchange=exchange==="binance"?"binance":"bybit";
-    const unique=[...new Set(symbols.map(s=>String(s).toUpperCase()).filter(s=>/USDT$/.test(s)))],key=`${exchange}:${unique.join(",")}`,cached=cache.get(key);
-    if(!force&&cached&&Date.now()-cached.at<CACHE_TTL_MS)return cached.value;
-    const [rows,caps]=await Promise.all([exchange==="binance"?fetchBinance(unique):fetchBybit(unique),marketCaps(unique)]);
-    const value={exchange,rows:enrich(rows,caps),fetched_at_unix:Date.now()/1000,engine:"browser",source:exchange==="bybit"?ENDPOINTS.bybit:ENDPOINTS.binance};
-    cache.set(key,{at:Date.now(),value});return value;
-  }
-  async function diagnostics(exchange="bybit"){const value=await snapshot({exchange,symbols:["BTCUSDT"],force:true}),row=value.rows[0]||null;return {ok:!!row,exchange,row,checked_at:Date.now()};}
-  window.ZeroBrowserData={DEFAULT_SYMBOLS:[...DEFAULT_SYMBOLS],snapshot,diagnostics,clearCache:()=>{cache.clear();marketCapCache={at:0,values:{}};}};
+  const CACHE_TTL_MS=10_000, MARKET_CAP_TTL_MS=15*60_000, REQUEST_TIMEOUT_MS=5_000, MAX_CONCURRENCY=4;
+  const ENDPOINTS={bybit:"https://api.bybit.com",binance:"https://fapi.binance.com"};
+  const cache=new Map(); let marketCapCache={at:0,values:{},source:"none"};
+  const finite=v=>Number.isFinite(Number(v))?Number(v):null;
+  const pct=(a,b)=>a==null||b==null||b===0?null:((a/b)-1)*100;
+  const sum=a=>{const n=a.filter(Number.isFinite);return n.length===a.length?n.reduce((x,y)=>x+y,0):null;};
+  const sorted=a=>[...a].sort((x,y)=>x.time-y.time);
+  async function getJson(url,params={}){const q=new URLSearchParams();for(const[k,v]of Object.entries(params))if(v!==undefined&&v!==null&&v!=="")q.set(k,String(v));const full=q.toString()?`${url}?${q}`:url,ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),REQUEST_TIMEOUT_MS);try{const r=await fetch(full,{cache:"no-store",signal:ctl.signal,headers:{Accept:"application/json"}});if(!r.ok)return null;return await r.json()}catch(_){return null}finally{clearTimeout(timer)}}
+  async function pool(items,worker){const out=new Array(items.length);let cursor=0;async function run(){while(true){const i=cursor++;if(i>=items.length)return;try{out[i]=await worker(items[i],i)}catch(e){out[i]={error:e?.message||String(e)}}}}await Promise.all(Array.from({length:Math.min(MAX_CONCURRENCY,items.length)},run));return out}
+  function parseBybitKlines(p){return sorted((p?.result?.list||[]).map(r=>({time:Number(r[0]),open:finite(r[1]),high:finite(r[2]),low:finite(r[3]),close:finite(r[4]),volume:finite(r[5]),turnover:finite(r[6])})).filter(r=>Number.isFinite(r.time)))}
+  function parseBinanceKlines(p){return sorted((Array.isArray(p)?p:[]).map(r=>({time:Number(r[0]),open:finite(r[1]),high:finite(r[2]),low:finite(r[3]),close:finite(r[4]),volume:finite(r[5]),turnover:finite(r[7])})).filter(r=>Number.isFinite(r.time)))}
+  function stripOpen(a,now,ms=300000){return a.filter(c=>c.time+ms<=now+1000)}
+  function stats(c,n){if(c.length<n*2)return{change:null,volumeChange:null};const a=c.slice(-n),b=c.slice(-n*2,-n),ac=a.at(-1)?.close,bc=b.at(-1)?.close,av=sum(a.map(x=>x.turnover??(x.close!=null&&x.volume!=null?x.close*x.volume:NaN))),bv=sum(b.map(x=>x.turnover??(x.close!=null&&x.volume!=null?x.close*x.volume:NaN)));return{change:pct(ac,bc),volumeChange:pct(av,bv)}}
+  function derive(c){const windows={"5m":1,"15m":3,"1h":12,"4h":48,"24h":288},o={};for(const[k,n]of Object.entries(windows)){const s=stats(c,n);o[`change_${k}_pct`]=s.change;o[`volume_${k}_pct`]=s.volumeChange}const last=c.at(-1);o.price=last?.close??null;o.market_data_time_unix=last?last.time/1000:0;return o}
+  function parseBybitOi(p){return(p?.result?.list||[]).map(r=>({time:Number(r.timestamp),value:finite(r.singleOpenInterest??r.openInterest)})).filter(r=>Number.isFinite(r.time)&&r.value!=null).sort((a,b)=>a.time-b.time)}
+  function parseBinanceOi(p){return(Array.isArray(p)?p:[]).map(r=>({time:Number(r.timestamp),value:finite(r.sumOpenInterestValue??r.sumOpenInterest)})).filter(r=>Number.isFinite(r.time)&&r.value!=null).sort((a,b)=>a.time-b.time)}
+  function atOrBefore(rows,t){let x=null;for(const r of rows){if(r.time<=t)x=r.value;else break}return x}
+  function oi(rows5,rows1,now){const latest=rows5.at(-1)?.value??rows1.at(-1)?.value??null,src=rows5.length?rows5:rows1;return{oi_5m_pct:pct(latest,atOrBefore(src,now-300000)),oi_15m_pct:pct(latest,atOrBefore(src,now-900000)),oi_1h_pct:pct(latest,atOrBefore(src,now-3600000)),oi_4h_pct:pct(latest,atOrBefore(rows1,now-14400000)),oi_24h_pct:pct(latest,atOrBefore(rows1,now-86400000)),oi_status:latest!=null?"CURRENT":"MISSING",oi_reference_time_ms:src.at(-1)?.time??0}}
+  function crowdBybit(p,t){const x=p?.result?.list?.[0],buy=finite(x?.buyRatio),sell=finite(x?.sellRatio);return{funding_rate:finite(t?.fundingRate),long_ratio:buy,short_ratio:sell,crowd_ratio:buy!=null&&sell!=null&&sell!==0?buy/sell:null,crowd_timestamp:finite(x?.timestamp)}}
+  function crowdBinance(p,t){const x=Array.isArray(p)?p.at(-1):null,l=finite(x?.longAccount),s=finite(x?.shortAccount);return{funding_rate:finite(t?.lastFundingRate),long_ratio:l,short_ratio:s,crowd_ratio:l!=null&&s!=null&&s!==0?l/s:null,crowd_timestamp:finite(x?.timestamp)}}
+  function participation(r){const p=finite(r.change_15m_pct),o=finite(r.oi_15m_pct),v=finite(r.volume_15m_pct);if(p==null||o==null||v==null)return{participation_trend:"QUIET",participation_direction:null};if(!(v>20||Math.abs(o)>0.3))return{participation_trend:"QUIET",participation_direction:null};if(p>0&&o>0)return{participation_trend:"INCREASING",participation_direction:"BULLISH"};if(p<0&&o>0)return{participation_trend:"INCREASING",participation_direction:"BEARISH"};if(o<0&&Math.abs(p)>0.1)return{participation_trend:"DECREASING",participation_direction:p>0?"BULLISH":"BEARISH"};return{participation_trend:"ACTIVE",participation_direction:p>=0?"BULLISH":"BEARISH"}}
+  async function bybitRow(symbol,ticker,now){const [kp,o5,o1,cr]=await Promise.all([getJson(`${ENDPOINTS.bybit}/v5/market/kline`,{category:"linear",symbol,interval:"5",limit:1000}),getJson(`${ENDPOINTS.bybit}/v5/market/open-interest`,{category:"linear",symbol,intervalTime:"5min",limit:200}),getJson(`${ENDPOINTS.bybit}/v5/market/open-interest`,{category:"linear",symbol,intervalTime:"1h",limit:30}),getJson(`${ENDPOINTS.bybit}/v5/market/account-ratio`,{category:"linear",symbol,period:"15min",limit:2})]);const candles=stripOpen(parseBybitKlines(kp),now),m=derive(candles),o=oi(parseBybitOi(o5),parseBybitOi(o1),now),c=crowdBybit(cr,ticker),r={symbol,base:symbol.replace(/USDT$/,""),...m,price:finite(ticker?.lastPrice)??m.price,turnover_24h:finite(ticker?.turnover24h),volume_24h:finite(ticker?.volume24h),market_cap_usd:null,turnover_24h_pct:null,...o,...c,observed_at_unix:now/1000,data_status:"LIVE",source:"browser/bybit",data_quality:{candles:!!kp,oi5m:!!o5,oi1h:!!o1,crowd:!!cr}};Object.assign(r,participation(r));return r}
+  async function binanceRow(symbol,ticker,now){const[kp,op,cr,fp]=await Promise.all([getJson(`${ENDPOINTS.binance}/fapi/v1/klines`,{symbol,interval:"5m",limit:1000}),getJson(`${ENDPOINTS.binance}/futures/data/openInterestHist`,{symbol,period:"5m",contractType:"PERPETUAL",limit:500}),getJson(`${ENDPOINTS.binance}/futures/data/globalLongShortAccountRatio`,{symbol,period:"15m",contractType:"PERPETUAL",limit:2}),getJson(`${ENDPOINTS.binance}/fapi/v1/premiumIndex`,{symbol})]);const candles=stripOpen(parseBinanceKlines(kp),now),m=derive(candles),or=parseBinanceOi(op),o=oi(or,[],now),c=crowdBinance(cr,{...ticker,lastFundingRate:fp?.lastFundingRate}),latest=or.at(-1)?.value??null,r={symbol,base:symbol.replace(/USDT$/,""),...m,price:finite(ticker?.lastPrice)??m.price,turnover_24h:finite(ticker?.quoteVolume),volume_24h:finite(ticker?.volume),market_cap_usd:null,turnover_24h_pct:null,...o,oi_4h_pct:pct(latest,atOrBefore(or,now-14400000)),oi_24h_pct:pct(latest,atOrBefore(or,now-86400000)),...c,observed_at_unix:now/1000,data_status:"LIVE",source:"browser/binance",data_quality:{candles:!!kp,oi5m:!!op,crowd:!!cr,funding:!!fp}};Object.assign(r,participation(r));return r}
+  async function discoverBybit(){let cursor="",all=[];for(let page=0;page<10;page++){const p=await getJson(`${ENDPOINTS.bybit}/v5/market/instruments-info`,{category:"linear",limit:1000,cursor});const list=p?.result?.list||[];all.push(...list);const next=p?.result?.nextPageCursor;if(!next||!list.length)break;cursor=next}return [...new Map(all.filter(x=>x.status==="Trading"&&x.quoteCoin==="USDT"&&/USDT$/.test(x.symbol)&&String(x.contractType||"").toUpperCase().includes("PERPETUAL")).map(x=>[x.symbol,{symbol:x.symbol,base:x.baseCoin||x.symbol.replace(/USDT$/i,"")}])).values()]}
+  async function discoverBinance(){const p=await getJson(`${ENDPOINTS.binance}/fapi/v1/exchangeInfo`);return(Array.isArray(p?.symbols)?p.symbols:[]).filter(x=>x.status==="TRADING"&&x.contractType==="PERPETUAL"&&x.quoteAsset==="USDT").map(x=>({symbol:x.symbol,base:x.baseAsset||x.symbol.replace(/USDT$/i,"")}))}
+  async function discover(exchange){return exchange==="binance"?discoverBinance():discoverBybit()}
+  async function marketCaps(symbols){const now=Date.now();if(now-marketCapCache.at<MARKET_CAP_TTL_MS)return marketCapCache;const wanted=new Set(symbols.map(s=>s.replace(/USDT$/i,"").toUpperCase())),values={};let source="none";try{const p=await getJson("https://api.coingecko.com/api/v3/coins/markets",{vs_currency:"usd",order:"market_cap_desc",per_page:250,page:1,sparkline:"false"});for(const c of Array.isArray(p)?p:[]){const s=String(c?.symbol||"").toUpperCase();if(wanted.has(s)&&finite(c?.market_cap)!=null)values[s]=finite(c.market_cap)}if(Object.keys(values).length){source="coingecko"}}catch(_){}if(!Object.keys(values).length){try{const p=await getJson("https://api.coinpaprika.com/v1/tickers",{quotes:"USD"});for(const c of Array.isArray(p)?p:[]){const s=String(c?.symbol||"").toUpperCase();const cap=finite(c?.quotes?.USD?.market_cap);if(wanted.has(s)&&cap!=null)values[s]=cap}if(Object.keys(values).length)source="coinpaprika"}catch(_){}}marketCapCache={at:now,values,source};return marketCapCache}
+  async function fetchBybit(symbols){const p=await getJson(`${ENDPOINTS.bybit}/v5/market/tickers`,{category:"linear"}),map=new Map((p?.result?.list||[]).map(t=>[t.symbol,t])),wanted=symbols.filter(s=>map.has(s)),rows=await pool(wanted,s=>bybitRow(s,map.get(s),Date.now()));return rows.filter(r=>r&&!r.error)}
+  async function fetchBinance(symbols){const p=await getJson(`${ENDPOINTS.binance}/fapi/v1/ticker/24hr`),map=new Map((Array.isArray(p)?p:[]).map(t=>[t.symbol,t])),wanted=symbols.filter(s=>map.has(s)),rows=await pool(wanted,s=>binanceRow(s,map.get(s),Date.now()));return rows.filter(r=>r&&!r.error)}
+  function enrich(rows,caps){return rows.map(r=>({...r,market_cap_usd:caps[r.base]??null,turnover_24h_pct:caps[r.base]&&r.turnover_24h!=null?(r.turnover_24h/caps[r.base])*100:null}))}
+  async function snapshot({exchange="bybit",symbols=null,force=false}={}){exchange=exchange==="binance"?"binance":"bybit";const universe=symbols?.length?symbols.map(s=>String(s).toUpperCase()):await discover(exchange),unique=[...new Set(universe.filter(s=>/USDT$/.test(s)))],key=`${exchange}:${unique.join(",")}`,cached=cache.get(key);if(!force&&cached&&Date.now()-cached.at<CACHE_TTL_MS)return cached.value;const[caps,rows]=await Promise.all([marketCaps(unique),exchange==="binance"?fetchBinance(unique):fetchBybit(unique)]),value={exchange,universe_count:unique.length,market_cap_source:caps.source,market_cap_count:Object.keys(caps.values).length,rows:enrich(rows,caps.values),fetched_at_unix:Date.now()/1000,engine:"browser",source:ENDPOINTS[exchange]};cache.set(key,{at:Date.now(),value});return value}
+  async function diagnostics(exchange="bybit"){const u=await discover(exchange);return{exchange,universe_count:u.length,sample:u.slice(0,20),checked_at:Date.now()}}
+  window.ZeroBrowserData={snapshot,diagnostics,discover,clearCache:()=>{cache.clear();marketCapCache={at:0,values:{},source:"none"}}};
 })();
