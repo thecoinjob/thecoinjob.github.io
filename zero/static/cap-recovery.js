@@ -44,13 +44,15 @@
   window.fetch = async function(input, init) {
     const url = typeof input === "string" ? input : input?.url || "";
     const parsed = new URL(url, location.href);
-    if (parsed.pathname === "/api/screen") {
+    const match = parsed.pathname.match(/^\/api\/screen\/(bybit|binance)$/);
+    if (match) {
       const response = await nativeFetch(input, init);
       let data;
       try { data = await response.clone().json(); } catch (_) { return response; }
       if (data?.main_board?.length || !(Number(data?.market_count) > 0)) return response;
       try {
-        const fallback = await buildFallback(parsed.pathname.includes("binance") ? "binance" : (parsed.searchParams.get("exchange") || "bybit"));
+        const exchange = match[1];
+        const fallback = await buildFallback(exchange);
         return new Response(JSON.stringify({
           ...data,
           main_board: fallback.rows,
