@@ -1,17 +1,21 @@
-/* Zero browser migration bridge.
- * Today: /api requests fall back to the existing Render API.
- * Later: these handlers will be replaced one endpoint at a time by browser-native calculations.
+/* Zero Pages service-worker cleanup.
+ *
+ * Zero no longer proxies API requests through Render. The scanner's browser
+ * engine talks directly to the public exchange APIs. If an older Zero service
+ * worker is still registered in a browser, this worker unregisters itself so
+ * the old Render proxy cannot intercept requests.
  */
-const RENDER_API = "https://zero-scan1.onrender.com";
-self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", event => event.waitUntil(self.clients.claim()));
+self.addEventListener("install", event => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    await self.clients.claim();
+    await self.registration.unregister();
+  })());
+});
+
 self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || !url.pathname.startsWith("/api/")) return;
-  event.respondWith(fetch(RENDER_API + url.pathname + url.search, {
-    method: event.request.method,
-    headers: event.request.headers,
-    body: event.request.method === "GET" || event.request.method === "HEAD" ? undefined : event.request.body,
-    cache: "no-store",
-  }));
+  // Intentionally do not intercept requests.
 });
