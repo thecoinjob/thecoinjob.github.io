@@ -56,4 +56,40 @@
     }
     return previousFetch(input, init);
   };
+
+  /* browser-board-population is loaded later. Once available, let a fully enriched
+     turnover fallback remain visible instead of collapsing back to the saved 12-coin set. */
+  function installBoardFallback() {
+    const board = window.ZeroBrowserBoard;
+    if (!board?.create) return setTimeout(installBoardFallback, 0);
+    if (board.create.__tcjFallbackWrapped) return;
+    const originalCreate = board.create;
+    const wrappedCreate = function(storage) {
+      const instance = originalCreate(storage);
+      const originalVisible = instance.visible;
+      instance.visible = function(rows, exchange, now = Date.now(), screenMode = false) {
+        const fallbackLive = screenMode && Array.isArray(rows)
+          && rows.length > 1
+          && rows.some(row => row?.data_status === "LIVE")
+          && rows.every(row => row?.market_cap_usd == null);
+        if (fallbackLive) {
+          return rows
+            .filter(row => row?.symbol && row.symbol !== "")
+            .sort((a, b) => (Number(b.turnover_24h) || 0) - (Number(a.turnover_24h) || 0))
+            .slice(0, 32)
+            .map((row, index) => ({
+              ...row,
+              pinned_order: row.symbol === "BTCUSDT" ? 0 : null,
+              automatic_mover: row.symbol !== "BTCUSDT",
+              retained_on_board: true,
+            }));
+        }
+        return originalVisible.call(instance, rows, exchange, now, screenMode);
+      };
+      return instance;
+    };
+    wrappedCreate.__tcjFallbackWrapped = true;
+    board.create = wrappedCreate;
+  }
+  installBoardFallback();
 })();
