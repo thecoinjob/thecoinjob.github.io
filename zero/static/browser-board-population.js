@@ -73,11 +73,16 @@ window.ZeroBrowserBoard = (() => {
       const inputRows = Array.isArray(rows) ? rows : [];
       const bySymbol = new Map(inputRows.filter(r => validSymbol(r.symbol)).map(r => [r.symbol, r]));
       if (screenMode) {
-        /* Diagnostic fallback rows are PARTIAL rather than LIVE. Do not discard them before the UI can display the failure mode. */
+        /* A turnover fallback can be either PARTIAL (ticker-only) or LIVE (detail
+           enrichment succeeded but market-cap coverage is unavailable). Both must
+           remain visible; otherwise the normal retention rules collapse the board
+           back to the saved list before the rest of the scanner can use the rows. */
         const partial = [...bySymbol.values()].filter(row => row.data_status === "PARTIAL");
-        if (partial.length) {
+        const fallbackLive = [...bySymbol.values()].filter(row => row.data_status === "LIVE" && row.market_cap_usd == null);
+        const fallbackRows = partial.length ? partial : fallbackLive;
+        if (fallbackRows.length) {
           const btc = bySymbol.get("BTCUSDT");
-          const automatic = partial.filter(row => row.symbol !== "BTCUSDT")
+          const automatic = fallbackRows.filter(row => row.symbol !== "BTCUSDT")
             .sort((a, b) => (Number(b.turnover_24h) || 0) - (Number(a.turnover_24h) || 0)).slice(0, 31);
           const output = btc ? [btc, ...automatic] : automatic.slice(0, 32);
           return output.map((row, index) => ({...row, pinned_order: index === 0 ? 0 : null, automatic_mover: row.symbol !== "BTCUSDT" && !entry.saved.includes(row.symbol), retained_on_board: true}));
