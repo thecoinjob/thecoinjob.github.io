@@ -133,3 +133,9 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .hero-art img{display:block;width:100%;height:auto;max-height:330px;object-fit:contain;mix-blend-mode:normal;filter:drop-shadow(0 12px 26px #0008);border:1px solid #18313a;border-radius:12px;background:#020a10}
 @media(max-width:1100px){.hero-art{height:285px}.hero-art img{max-height:285px}}
 @media(max-width:700px){.hero-art{height:auto;max-height:none;margin:12px -5px 0;overflow:hidden}.hero-art img{width:100%;height:auto;max-height:none;border-radius:9px}}
+
+/* Exchange coverage note */
+.feature-strip .feature strong{overflow-wrap:anywhere}
+.exchange-notice{display:flex;align-items:center;gap:9px;margin:0 0 13px;padding:10px 15px;border:1px solid #23443a;border-radius:10px;background:linear-gradient(100deg,#071c17d9,#07141bcc);color:#b8c9c8;font-size:12px;line-height:1.5;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.exchange-status{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#a7ff42;box-shadow:0 0 10px #a7ff4280}
+@media(max-width:700px){.exchange-notice{font-size:11px;margin-bottom:10px;padding:9px 11px}}
