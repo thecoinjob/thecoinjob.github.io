@@ -161,3 +161,9 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .dashboard-showcase .terminal-head{background:linear-gradient(90deg,#45ffa51d,#d5fff708);border-bottom:1px solid #3b755c;color:#e1ffe9}
 .dashboard-showcase .preview-dashboard{padding:7px;background:linear-gradient(135deg,#071912,#030a10);border-radius:0 0 15px 15px}
 .dashboard-showcase .preview-dashboard img{width:100%;height:auto;max-height:none;object-fit:contain;object-position:top;border:1px solid #285643;border-radius:9px;box-shadow:0 3px 18px #0007,0 0 14px #32e58a0d}
+
+/* Approved ETHFIUSDT chart example */
+.chart-slot.chart-pair{padding:14px;overflow:hidden;background:linear-gradient(135deg,#0b191d,#050c12 62%,#0a1914);border:1px solid #365d49;border-radius:16px;box-shadow:inset 0 1px 0 #ffffff12,0 12px 32px #0005,0 0 22px #a7ff4210}
+.chart-slot.chart-pair .chart-slot-mark{display:inline-flex;align-items:center;margin:0 0 12px;padding:7px 11px;border:1px solid #6c9f5d77;border-radius:9px;background:#a7ff4212;color:#d9ffb5;font-size:11px;letter-spacing:.12em}
+.chart-slot.chart-pair img{display:block;width:100%;height:auto;max-width:100%;border:1px solid #203b3e;border-radius:10px;background:#030a0f;box-shadow:0 4px 18px #0006}
+@media(max-width:700px){.chart-slot.chart-pair{padding:8px;border-radius:12px}.chart-slot.chart-pair .chart-slot-mark{font-size:10px;letter-spacing:.07em}}
