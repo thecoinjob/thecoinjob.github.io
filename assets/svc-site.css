@@ -155,3 +155,9 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .dashboard-showcase .preview-dashboard{padding:7px;background:linear-gradient(135deg,#08131b,#03080e);border-radius:0 0 15px 15px}
 .dashboard-showcase .preview-dashboard img{width:100%;height:auto;max-height:none;object-fit:contain;object-position:top;border:1px solid #203a43;border-radius:9px;box-shadow:0 3px 18px #0007}
 @media(max-width:700px){.dashboard-showcase .preview-dashboard{padding:4px}.dashboard-showcase .preview-dashboard img{border-radius:6px}}
+
+/* Bullish scanner screenshot: restrained emerald glass framing */
+.dashboard-showcase .terminal{border:1px solid #3e8766;background:linear-gradient(135deg,#38ff9c25,#0b2425 32%,#071018 76%,#5bffad22);box-shadow:0 0 0 1px #61ffb31a,inset 0 1px 0 #eaffff20,0 16px 40px #0009,0 0 26px #27e58d18}
+.dashboard-showcase .terminal-head{background:linear-gradient(90deg,#45ffa51d,#d5fff708);border-bottom:1px solid #3b755c;color:#e1ffe9}
+.dashboard-showcase .preview-dashboard{padding:7px;background:linear-gradient(135deg,#071912,#030a10);border-radius:0 0 15px 15px}
+.dashboard-showcase .preview-dashboard img{width:100%;height:auto;max-height:none;object-fit:contain;object-position:top;border:1px solid #285643;border-radius:9px;box-shadow:0 3px 18px #0007,0 0 14px #32e58a0d}
