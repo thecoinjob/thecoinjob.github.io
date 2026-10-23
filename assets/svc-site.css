@@ -167,3 +167,16 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .chart-slot.chart-pair .chart-slot-mark{display:inline-flex;align-items:center;margin:0 0 12px;padding:7px 11px;border:1px solid #6c9f5d77;border-radius:9px;background:#a7ff4212;color:#d9ffb5;font-size:11px;letter-spacing:.12em}
 .chart-slot.chart-pair img{display:block;width:100%;height:auto;max-width:100%;border:1px solid #203b3e;border-radius:10px;background:#030a0f;box-shadow:0 4px 18px #0006}
 @media(max-width:700px){.chart-slot.chart-pair{padding:8px;border-radius:12px}.chart-slot.chart-pair .chart-slot-mark{font-size:10px;letter-spacing:.07em}}
+
+/* Keep the method chart example confined to the page on phone, tablet and desktop */
+html,body{max-width:100%;overflow-x:hidden}
+.wrap,.guide,.guide-section{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.guide-section{overflow-wrap:anywhere}
+.chart-slot.chart-pair{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden;padding:clamp(8px,1.3vw,14px)}
+.chart-slot.chart-pair .chart-slot-mark{max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}
+.chart-slot.chart-pair img{display:block;width:100%;max-width:100%;min-width:0;height:auto;max-height:70vh;object-fit:contain;box-sizing:border-box}
+@media(max-width:700px){
+  .wrap{padding-left:16px;padding-right:16px}
+  .chart-slot.chart-pair{margin-top:16px;padding:7px;border-radius:12px}
+  .chart-slot.chart-pair img{width:100%;height:auto;max-height:none;object-fit:contain}
+}
