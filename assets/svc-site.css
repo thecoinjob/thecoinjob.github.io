@@ -127,3 +127,9 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .hero-art img{mix-blend-mode:screen}
 @media(max-width:1100px){.coin.btc{left:.2%}.coin.eth{left:-1.4%}.coin.sol{left:.2%}.coin.bnb{right:1%}.coin.xrp{right:-1%}.coin.hype{right:.4%}.coin.xau{right:1%}}
 @media(max-width:700px){.hero-copy .eyebrow{font-size:9px;padding:6px 9px;letter-spacing:1.3px}.coin.btc{left:-17px;top:92px}.coin.eth{left:-20px;top:205px}.coin.sol{left:-15px;top:310px}.coin.bnb{right:-17px;top:65px}.coin.xrp{right:-20px;top:155px}.coin.hype{right:-20px;top:245px}.coin.xau{right:-15px;top:325px}}
+
+/* Use the user's exact 15-minute PEPEUSDT chart in the hero */
+.hero-art{height:330px;min-width:0;display:flex;align-items:center;justify-content:center;background:transparent;overflow:visible}
+.hero-art img{display:block;width:100%;height:auto;max-height:330px;object-fit:contain;mix-blend-mode:normal;filter:drop-shadow(0 12px 26px #0008);border:1px solid #18313a;border-radius:12px;background:#020a10}
+@media(max-width:1100px){.hero-art{height:285px}.hero-art img{max-height:285px}}
+@media(max-width:700px){.hero-art{height:auto;max-height:none;margin:12px -5px 0;overflow:hidden}.hero-art img{width:100%;height:auto;max-height:none;border-radius:9px}}
