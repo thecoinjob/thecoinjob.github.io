@@ -148,3 +148,10 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .scanner-copy .eyebrow{color:#d8ff9b;text-shadow:0 0 18px #a7ff424d}
 .hero-copy .eyebrow{color:#e0ffb7;border-color:#b6ff6caa;background:linear-gradient(135deg,#b6ff6c36,#d4fff31c);box-shadow:inset 0 1px 0 #ffffff45,inset 0 -1px 0 #a7ff4226,0 0 0 1px #b6ff6c20,0 0 26px #a7ff4238,0 6px 22px #0005;backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%)}
 @media(max-width:700px){.preview-dashboard{padding:3px}.preview-dashboard img{width:100%;height:auto;object-fit:contain}.dashboard-showcase .terminal-head{padding:10px 12px}}
+
+/* Final polish for the user's cleanly cropped Zero Scanner screenshot */
+.dashboard-showcase .terminal{padding:1px;border:1px solid #41634f;border-radius:16px;background:linear-gradient(135deg,#9cff4c22,#122a31 35%,#0a1119 75%,#6dffbb1c);box-shadow:0 0 0 1px #a7ff4215,inset 0 1px 0 #ffffff19,0 16px 40px #0009,0 0 24px #a7ff4210}
+.dashboard-showcase .terminal-head{background:linear-gradient(90deg,#b6ff6c17,#e4fff706);border-bottom:1px solid #3d5b4c;padding:12px 16px}
+.dashboard-showcase .preview-dashboard{padding:7px;background:linear-gradient(135deg,#08131b,#03080e);border-radius:0 0 15px 15px}
+.dashboard-showcase .preview-dashboard img{width:100%;height:auto;max-height:none;object-fit:contain;object-position:top;border:1px solid #203a43;border-radius:9px;box-shadow:0 3px 18px #0007}
+@media(max-width:700px){.dashboard-showcase .preview-dashboard{padding:4px}.dashboard-showcase .preview-dashboard img{border-radius:6px}}
