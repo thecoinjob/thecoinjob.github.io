@@ -139,3 +139,12 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .exchange-notice{display:flex;align-items:center;gap:9px;margin:0 0 13px;padding:10px 15px;border:1px solid #23443a;border-radius:10px;background:linear-gradient(100deg,#071c17d9,#07141bcc);color:#b8c9c8;font-size:12px;line-height:1.5;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .exchange-status{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#a7ff42;box-shadow:0 0 10px #a7ff4280}
 @media(max-width:700px){.exchange-notice{font-size:11px;margin-bottom:10px;padding:9px 11px}}
+
+/* Scanner screenshot: cleaner framing and a brighter glass-like frame */
+.dashboard-showcase .terminal{border:1px solid #4a7259;border-radius:15px;background:linear-gradient(145deg,#0a1b20e8,#071017f0);box-shadow:0 0 0 1px #b6ff6c18,inset 0 1px 0 #ffffff14,0 14px 38px #0008,0 0 30px #a7ff4210;overflow:hidden;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.dashboard-showcase .terminal-head{background:linear-gradient(100deg,#c5ff731b,#d5fff805);border-bottom:1px solid #6f9d5b55;color:#d9f7c1;padding:12px 16px;letter-spacing:1px}
+.preview-dashboard{background:#03090f;padding:5px}
+.preview-dashboard img{display:block;width:100%;height:auto;max-height:none;object-fit:contain;object-position:center;border-radius:8px;border:1px solid #1e3b3e}
+.scanner-copy .eyebrow{color:#d8ff9b;text-shadow:0 0 18px #a7ff424d}
+.hero-copy .eyebrow{color:#e0ffb7;border-color:#b6ff6caa;background:linear-gradient(135deg,#b6ff6c36,#d4fff31c);box-shadow:inset 0 1px 0 #ffffff45,inset 0 -1px 0 #a7ff4226,0 0 0 1px #b6ff6c20,0 0 26px #a7ff4238,0 6px 22px #0005;backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%)}
+@media(max-width:700px){.preview-dashboard{padding:3px}.preview-dashboard img{width:100%;height:auto;object-fit:contain}.dashboard-showcase .terminal-head{padding:10px 12px}}
