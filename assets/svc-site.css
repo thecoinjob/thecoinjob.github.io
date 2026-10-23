@@ -180,3 +180,13 @@ html,body{max-width:100%;overflow-x:hidden}
   .chart-slot.chart-pair{margin-top:16px;padding:7px;border-radius:12px}
   .chart-slot.chart-pair img{width:100%;height:auto;max-height:none;object-fit:contain}
 }
+
+/* Let the method page use the available site width on tablets and desktop */
+.guide{width:100%;max-width:none;min-width:0}
+.guide-hero,.guide-section{width:100%;max-width:none;min-width:0}
+.guide-section p{max-width:100%}
+.chart-slot.chart-pair{width:100%;max-width:100%;margin-left:0;margin-right:0}
+@media(min-width:701px){
+  .guide{padding-top:55px;padding-bottom:45px}
+  .guide-hero .lead{max-width:900px}
+}
