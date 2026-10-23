@@ -119,3 +119,11 @@ footer{padding-left:13.8%;padding-right:13.8%}
 .difference-heading h2 em{color:var(--lime)}
 .difference-card-accent .difference-index{color:var(--lime)}
 @media(min-width:701px){.dashboard-showcase{min-height:304px}.preview-dashboard{height:260px;max-height:260px}.difference{margin-top:0}}
+
+/* Brand clarity and corrected feature/scanner spacing */
+.hero-copy .eyebrow{display:table;position:relative;z-index:4;padding:8px 13px;border:1px solid #9eff4d60;border-radius:8px;background:linear-gradient(135deg,#a7ff421c,#c6fff008);box-shadow:inset 0 1px 0 #ffffff17,0 5px 22px #9fff4210;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#baff78;letter-spacing:1.8px;font-weight:800}
+.coin.btc{left:1.2%;top:102px}.coin.eth{left:.4%;top:225px}.coin.sol{left:2.5%;top:344px}
+.coin.bnb{right:4.6%;top:32px}.coin.xrp{right:1.2%;top:146px}.coin.hype{right:3.1%;top:252px}.coin.xau{right:4.1%;top:357px}
+.hero-art img{mix-blend-mode:screen}
+@media(max-width:1100px){.coin.btc{left:.2%}.coin.eth{left:-1.4%}.coin.sol{left:.2%}.coin.bnb{right:1%}.coin.xrp{right:-1%}.coin.hype{right:.4%}.coin.xau{right:1%}}
+@media(max-width:700px){.hero-copy .eyebrow{font-size:9px;padding:6px 9px;letter-spacing:1.3px}.coin.btc{left:-17px;top:92px}.coin.eth{left:-20px;top:205px}.coin.sol{left:-15px;top:310px}.coin.bnb{right:-17px;top:65px}.coin.xrp{right:-20px;top:155px}.coin.hype{right:-20px;top:245px}.coin.xau{right:-15px;top:325px}}
