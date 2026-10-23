@@ -226,3 +226,9 @@ html,body{max-width:100%;overflow-x:hidden}
  .coin.btc{transform:scale(.84);opacity:1}
  .coin.xau{opacity:.32}
 }
+
+
+/* Indicator-first messaging: three clear capabilities across desktop and mobile */
+.feature-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+.hero-copy>p strong{display:block;color:var(--lime);font-weight:750;margin-bottom:8px}
+@media(max-width:700px){.feature-strip{grid-template-columns:1fr 1fr}}
